@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda — Consultorio Pediátrico</title>
+<style>
+  :root {
+    --navy:#1B3A5C; --teal:#0E7C7B; --accent:#2E86AB;
+    --light:#EAF4F4; --green:#27AE60; --orange:#E67E22;
+    --red:#E74C3C; --purple:#8E44AD; --gray:#95A5A6;
+    --bg:#F0F4F8; --card:#FFFFFF; --border:#D5E8E8;
+    --text:#2C3E50; --text-light:#7F8C8D;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+  /* HEADER */
+  header{background:linear-gradient(135deg,var(--navy) 0%,var(--teal) 100%);color:white;padding:0 24px;
+    display:flex;align-items:center;justify-content:space-between;height:64px;
+    box-shadow:0 2px 12px rgba(0,0,0,.25);position:sticky;top:0;z-index:200;}
+  .brand{display:flex;align-items:center;gap:12px;font-size:1.1rem;font-weight:700;}
+  .brand-icon{background:rgba(255,255,255,.2);border-radius:10px;width:38px;height:38px;
+    display:flex;align-items:center;justify-content:center;font-size:1.4rem;}
+  .nav-links{display:flex;gap:8px;}
+  .nav-links a{color:rgba(255,255,255,.85);text-decoration:none;padding:8px 14px;
+    border-radius:8px;font-size:.88rem;transition:background .2s;}
+  .nav-links a:hover,.nav-links a.active{background:rgba(255,255,255,.2);}
+  .btn-back{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);
+    color:white;padding:7px 16px;border-radius:8px;text-decoration:none;font-size:.85rem;
+    display:flex;align-items:center;gap:6px;transition:background .2s;}
+  .btn-back:hover{background:rgba(255,255,255,.25);}
+
+  /* LAYOUT */
+  .app{display:grid;grid-template-columns:280px 1fr;min-height:calc(100vh - 64px);}
+
+  /* SIDEBAR */
+  .sidebar{background:var(--card);border-right:1px solid var(--border);padding:0;overflow-y:auto;}
+  .sidebar-section{padding:16px;}
+  .sidebar-section+.sidebar-section{border-top:1px solid var(--border);}
+  .sidebar-title{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;
+    color:var(--text-light);margin-bottom:12px;}
+
+  /* Mini calendar */
+  .mini-cal{width:100%;}
+  .mini-cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .mini-cal-nav{background:none;border:none;cursor:pointer;color:var(--navy);font-size:1.1rem;
+    width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+  .mini-cal-nav:hover{background:var(--light);}
+  .mini-cal-month{font-weight:700;font-size:.9rem;color:var(--navy);}
+  .mini-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+  .mini-day-name{text-align:center;font-size:.7rem;font-weight:700;color:var(--text-light);padding:4px 0;}
+  .mini-day{text-align:center;font-size:.8rem;padding:4px;border-radius:6px;cursor:pointer;
+    transition:all .15s;line-height:1.4;}
+  .mini-day:hover{background:var(--light);}
+  .mini-day.today{background:var(--teal);color:white;font-weight:700;}
+  .mini-day.selected{background:var(--navy);color:white;font-weight:700;}
+  .mini-day.has-cita{position:relative;}
+  .mini-day.has-cita::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);
+    width:4px;height:4px;border-radius:50%;background:var(--orange);}
+  .mini-day.other-month{color:var(--text-light);opacity:.5;}
+  .mini-day.empty{cursor:default;}
+
+  /* Filtros laterales */
+  .filter-group{margin-bottom:12px;}
+  .filter-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;
+    cursor:pointer;transition:background .15s;font-size:.87rem;}
+  .filter-item:hover{background:var(--light);}
+  .filter-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+  .filter-label{flex:1;}
+  .filter-count{background:var(--bg);color:var(--text-light);font-size:.75rem;
+    padding:1px 7px;border-radius:20px;font-weight:600;}
+
+  /* Stats rápidas */
+  .quick-stat{background:var(--bg);border-radius:10px;padding:12px;margin-bottom:8px;
+    display:flex;align-items:center;gap:10px;}
+  .quick-stat-icon{font-size:1.4rem;}
+  .quick-stat-val{font-size:1.3rem;font-weight:800;color:var(--navy);}
+  .quick-stat-lbl{font-size:.75rem;color:var(--text-light);}
+
+  /* MAIN AREA */
+  .main-area{display:flex;flex-direction:column;overflow:hidden;}
+
+  /* Toolbar */
+  .toolbar{background:var(--card);border-bottom:1px solid var(--border);
+    padding:14px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .view-tabs{display:flex;background:var(--bg);border-radius:8px;padding:3px;gap:2px;}
+  .view-tab{padding:6px 14px;border:none;border-radius:6px;background:transparent;
+    font-size:.83rem;font-weight:600;color:var(--text-light);cursor:pointer;transition:all .2s;}
+  .view-tab.active{background:var(--teal);color:white;}
+  .toolbar-nav{display:flex;align-items:center;gap:6px;}
+  .nav-btn{background:var(--bg);border:1.5px solid var(--border);border-radius:8px;
+    width:34px;height:34px;cursor:pointer;font-size:1rem;display:flex;align-items:center;
+    justify-content:center;transition:all .2s;}
+  .nav-btn:hover{background:var(--light);border-color:var(--teal);}
+  .today-btn{background:var(--teal);color:white;border:none;padding:7px 14px;
+    border-radius:8px;font-size:.83rem;font-weight:600;cursor:pointer;transition:background .2s;}
+  .today-btn:hover{background:var(--navy);}
+  .current-period{font-size:1rem;font-weight:700;color:var(--navy);min-width:200px;}
+  .btn-nueva-cita{margin-left:auto;background:var(--teal);color:white;border:none;
+    padding:9px 18px;border-radius:8px;font-size:.88rem;font-weight:600;cursor:pointer;
+    display:flex;align-items:center;gap:6px;transition:background .2s;}
+  .btn-nueva-cita:hover{background:var(--navy);}
+
+  /* CALENDAR CONTAINER */
+  .cal-container{flex:1;overflow:auto;padding:0;}
+
+  /* ── VISTA MENSUAL ── */
+  .cal-month{display:flex;flex-direction:column;height:100%;}
+  .cal-week-header{display:grid;grid-template-columns:repeat(7,1fr);
+    background:var(--navy);color:white;}
+  .cal-week-header div{padding:10px;text-align:center;font-size:.8rem;font-weight:700;text-transform:uppercase;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);flex:1;}
+  .cal-cell{border-right:1px solid var(--border);border-bottom:1px solid var(--border);
+    min-height:100px;padding:6px;cursor:pointer;transition:background .15s;position:relative;}
+  .cal-cell:hover{background:rgba(14,124,123,.04);}
+  .cal-cell.today{background:rgba(14,124,123,.06);}
+  .cal-cell.today .day-num{background:var(--teal);color:white;border-radius:50%;}
+  .cal-cell.selected{background:rgba(14,124,123,.1);}
+  .cal-cell.other-month{background:var(--bg);opacity:.7;}
+  .cal-cell:nth-child(7n){border-right:none;}
+  .day-num{display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;
+    font-size:.85rem;font-weight:700;color:var(--navy);margin-bottom:4px;}
+  .cita-pill{font-size:.72rem;padding:2px 6px;border-radius:4px;margin-bottom:2px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;
+    display:flex;align-items:center;gap:3px;}
+  .more-citas{font-size:.72rem;color:var(--text-light);font-weight:600;padding:1px 4px;}
+
+  /* ── VISTA SEMANAL ── */
+  .cal-week{display:grid;grid-template-columns:60px repeat(7,1fr);height:calc(100vh - 200px);overflow-y:auto;}
+  .cal-week-times{border-right:1px solid var(--border);}
+  .cal-week-col{border-right:1px solid var(--border);position:relative;}
+  .cal-week-col:last-child{border-right:none;}
+  .week-col-header{background:var(--navy);color:white;padding:8px;text-align:center;
+    font-size:.8rem;font-weight:700;position:sticky;top:0;z-index:10;}
+  .week-col-header.today-col{background:var(--teal);}
+  .week-col-header .wd{font-size:.7rem;opacity:.8;}
+  .time-slot{height:48px;border-bottom:1px solid var(--border);padding:0 4px;
+    font-size:.72rem;color:var(--text-light);display:flex;align-items:center;}
+  .time-slot.hour{border-bottom:1px solid var(--border);}
+  .week-cell{height:48px;border-bottom:1px solid rgba(213,232,232,.5);position:relative;}
+  .week-cell.hour-mark{border-bottom:1px solid var(--border);}
+  .week-cell:hover{background:rgba(14,124,123,.05);}
+  .week-event{position:absolute;left:2px;right:2px;border-radius:4px;font-size:.72rem;
+    padding:2px 5px;overflow:hidden;cursor:pointer;z-index:5;box-shadow:0 1px 4px rgba(0,0,0,.15);}
+
+  /* ── VISTA DIARIA ── */
+  .cal-day{display:grid;grid-template-columns:60px 1fr;height:calc(100vh - 200px);overflow-y:auto;}
+  .day-col-header{background:var(--teal);color:white;padding:12px;text-align:center;font-weight:700;
+    position:sticky;top:0;z-index:10;}
+
+  /* ── LISTA ── */
+  .cal-list{padding:16px;}
+  .list-day-group{margin-bottom:20px;}
+  .list-day-title{font-size:.9rem;font-weight:700;color:var(--navy);padding:8px 12px;
+    background:var(--light);border-radius:8px;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+  .list-event{background:var(--card);border-radius:10px;border:1px solid var(--border);
+    padding:14px 16px;margin-bottom:8px;display:flex;align-items:flex-start;gap:14px;
+    cursor:pointer;transition:all .15s;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+  .list-event:hover{border-color:var(--teal);box-shadow:0 2px 8px rgba(14,124,123,.12);}
+  .list-event-time{min-width:60px;font-size:.85rem;font-weight:700;color:var(--navy);}
+  .list-event-bar{width:4px;border-radius:4px;align-self:stretch;flex-shrink:0;}
+  .list-event-content{flex:1;}
+  .list-event-title{font-weight:700;font-size:.9rem;margin-bottom:3px;}
+  .list-event-meta{font-size:.78rem;color:var(--text-light);}
+  .list-event-actions{display:flex;gap:6px;align-self:center;}
+
+  /* CITA COLORES */
+  .tipo-consulta{background:#D5F5E3;color:#1E8449;border-left:3px solid #27AE60;}
+  .tipo-cirugia{background:#D6EAF8;color:#1A5276;border-left:3px solid #2E86AB;}
+  .tipo-seguimiento{background:#FDEBD0;color:#B7770D;border-left:3px solid #E67E22;}
+  .tipo-urgencia{background:#FADBD8;color:#922B21;border-left:3px solid #E74C3C;}
+  .tipo-nuevo{background:#E8DAEF;color:#6C3483;border-left:3px solid #8E44AD;}
+  .dot-consulta{background:#27AE60;}
+  .dot-cirugia{background:#2E86AB;}
+  .dot-seguimiento{background:#E67E22;}
+  .dot-urgencia{background:#E74C3C;}
+  .dot-nuevo{background:#8E44AD;}
+
+  /* BADGE */
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;
+    border-radius:20px;font-size:.74rem;font-weight:600;}
+  .badge-confirmada{background:#D5F5E3;color:#1E8449;}
+  .badge-pendiente{background:#FDEBD0;color:#B7770D;}
+  .badge-cancelada{background:#FADBD8;color:#922B21;}
+  .badge-completada{background:#D6EAF8;color:#1A5276;}
+  .badge-no-asistio{background:#F2F3F4;color:#7F8C8D;}
+
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;
+    display:flex;align-items:center;justify-content:center;padding:20px;
+    opacity:0;pointer-events:none;transition:opacity .25s;}
+  .modal-overlay.open{opacity:1;pointer-events:all;}
+  .modal{background:white;border-radius:16px;padding:28px;max-width:580px;width:100%;
+    box-shadow:0 20px 60px rgba(0,0,0,.3);transform:translateY(20px);transition:transform .25s;
+    max-height:90vh;overflow-y:auto;}
+  .modal-overlay.open .modal{transform:translateY(0);}
+  .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+  .modal-title{font-size:1.1rem;font-weight:700;color:var(--navy);}
+  .modal-close{background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--gray);}
+  .form-group{margin-bottom:14px;}
+  .form-group label{display:block;font-size:.84rem;font-weight:600;color:var(--navy);margin-bottom:5px;}
+  .form-control{width:100%;border:1.5px solid var(--border);border-radius:8px;
+    padding:9px 12px;font-size:.9rem;color:var(--text);transition:border-color .2s;}
+  .form-control:focus{outline:none;border-color:var(--teal);}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
+  .btn-primary{background:var(--teal);color:white;border:none;padding:9px 20px;
+    border-radius:8px;font-size:.88rem;font-weight:600;cursor:pointer;transition:background .2s;}
+  .btn-primary:hover{background:var(--navy);}
+  .btn-secondary{background:white;color:var(--text);border:1.5px solid var(--border);
+    padding:9px 18px;border-radius:8px;font-size:.88rem;cursor:pointer;font-weight:600;}
+  .btn-danger{background:var(--red);color:white;border:none;padding:8px 16px;
+    border-radius:8px;font-size:.85rem;cursor:pointer;font-weight:600;}
+
+  /* DETALLE CITA */
+  .cita-detail{display:flex;flex-direction:column;gap:12px;}
+  .detail-row{display:flex;gap:12px;align-items:flex-start;}
+  .detail-icon{font-size:1.2rem;width:28px;flex-shrink:0;margin-top:2px;}
+  .detail-label{font-size:.78rem;color:var(--text-light);font-weight:600;margin-bottom:2px;}
+  .detail-value{font-size:.92rem;color:var(--text);}
+
+  /* WA button */
+  .btn-wa{background:#25D366;color:white;border:none;padding:8px 16px;border-radius:8px;
+    font-size:.85rem;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:6px;}
+
+  /* Responsive */
+  @media(max-width:900px){.app{grid-template-columns:1fr;}.sidebar{display:none;}}
+  @media(max-width:600px){.form-row{grid-template-columns:1fr;}.nav-links{display:none;}}
+</style>
+</head>
+<body>
+<script src="branding.js"></script>
+
+<header>
+  <div class="brand">
+    <div class="brand-icon" id="hdr-icon" style="background:transparent;padding:0;width:40px;height:40px;"></div>
+    <div class="brand-text" id="hdr-text">
+      <div style="font-size:.88rem;font-weight:800;">Dr. Lorenzo E. Otaño S.</div>
+      <div style="font-size:.68rem;opacity:.82;">Cirujano Pediátrico · Neonatólogo · Laparoscopista</div>
+    </div>
+  </div>
+  <nav class="nav-links">
+    <a href="index.html">Dashboard</a>
+    <a href="agenda.html" class="active">Agenda</a>
+    <a href="dashboard_financiero.html">Finanzas</a>
+    <a href="aseguradoras.html">Aseguradoras</a>
+    <a href="documentos.html">Documentos</a>
+  </nav>
+  <a href="index.html" class="btn-back">← Principal</a>
+</header>
+
+<div class="app">
+
+  <!-- ═══ SIDEBAR ═══ -->
+  <aside class="sidebar">
+
+    <!-- Mini calendario -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">Navegación</div>
+      <div class="mini-cal">
+        <div class="mini-cal-header">
+          <button class="mini-cal-nav" onclick="miniNavMes(-1)">‹</button>
+          <span class="mini-cal-month" id="miniMesLabel"></span>
+          <button class="mini-cal-nav" onclick="miniNavMes(1)">›</button>
+        </div>
+        <div class="mini-cal-grid" id="miniCalGrid"></div>
+      </div>
+    </div>
+
+    <!-- Stats rápidas -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">Hoy</div>
+      <div class="quick-stat"><div class="quick-stat-icon">📅</div><div><div class="quick-stat-val" id="statHoy">0</div><div class="quick-stat-lbl">citas hoy</div></div></div>
+      <div class="quick-stat"><div class="quick-stat-icon">📆</div><div><div class="quick-stat-val" id="statSemana">0</div><div class="quick-stat-lbl">esta semana</div></div></div>
+      <div class="quick-stat"><div class="quick-stat-icon">⏳</div><div><div class="quick-stat-val" id="statPend">0</div><div class="quick-stat-lbl">pendientes confirmar</div></div></div>
+    </div>
+
+    <!-- Filtros por tipo -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">Filtrar por tipo</div>
+      <div class="filter-group">
+        <div class="filter-item" onclick="toggleFiltro('consulta', this)">
+          <div class="filter-dot dot-consulta"></div>
+          <span class="filter-label">Consulta</span>
+          <span class="filter-count" id="cnt-consulta">0</span>
+        </div>
+        <div class="filter-item" onclick="toggleFiltro('cirugia', this)">
+          <div class="filter-dot dot-cirugia"></div>
+          <span class="filter-label">Cirugía</span>
+          <span class="filter-count" id="cnt-cirugia">0</span>
+        </div>
+        <div class="filter-item" onclick="toggleFiltro('seguimiento', this)">
+          <div class="filter-dot dot-seguimiento"></div>
+          <span class="filter-label">Seguimiento</span>
+          <span class="filter-count" id="cnt-seguimiento">0</span>
+        </div>
+        <div class="filter-item" onclick="toggleFiltro('urgencia', this)">
+          <div class="filter-dot dot-urgencia"></div>
+          <span class="filter-label">Urgencia</span>
+          <span class="filter-count" id="cnt-urgencia">0</span>
+        </div>
+        <div class="filter-item" onclick="toggleFiltro('nuevo', this)">
+          <div class="filter-dot dot-nuevo"></div>
+          <span class="filter-label">Paciente nuevo</span>
+          <span class="filter-count" id="cnt-nuevo">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtro por estado -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">Filtrar por estado</div>
+      <select class="form-control" id="filtroEstado" onchange="renderVista()" style="font-size:.84rem;">
+        <option value="">Todos los estados</option>
+        <option value="pendiente">Pendiente</option>
+        <option value="confirmada">Confirmada</option>
+        <option value="completada">Completada</option>
+        <option value="cancelada">Cancelada</option>
+        <option value="no-asistio">No asistió</option>
+      </select>
+    </div>
+
+  </aside>
+
+  <!-- ═══ MAIN AREA ═══ -->
+  <div class="main-area">
+    <div class="toolbar">
+      <div class="view-tabs">
+        <button class="view-tab" onclick="cambiarVista('lista', this)">☰ Lista</button>
+        <button class="view-tab active" onclick="cambiarVista('mes', this)">📅 Mes</button>
+        <button class="view-tab" onclick="cambiarVista('semana', this)">📆 Semana</button>
+        <button class="view-tab" onclick="cambiarVista('dia', this)">📋 Día</button>
+      </div>
+      <div class="toolbar-nav">
+        <button class="nav-btn" onclick="navPeriodo(-1)">‹</button>
+        <button class="today-btn" onclick="irHoy()">Hoy</button>
+        <button class="nav-btn" onclick="navPeriodo(1)">›</button>
+      </div>
+      <div class="current-period" id="currentPeriod"></div>
+      <button class="btn-nueva-cita" onclick="abrirNuevaCita()">+ Nueva Cita</button>
+    </div>
+    <div class="cal-container" id="calContainer"></div>
+  </div>
+
+</div>
+
+<!-- ═══ MODAL: NUEVA / EDITAR CITA ═══ -->
+<div class="modal-overlay" id="modalCita">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="tituloModalCita">📅 Nueva Cita</span>
+      <button class="modal-close" onclick="cerrarModal('modalCita')">×</button>
+    </div>
+    <form onsubmit="guardarCita(event)">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Paciente *</label>
+          <select class="form-control" id="citaPaciente" required>
+            <option value="">Seleccionar...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tipo de Cita *</label>
+          <select class="form-control" id="citaTipo" required>
+            <option value="consulta">🟢 Consulta</option>
+            <option value="cirugia">🔵 Cirugía</option>
+            <option value="seguimiento">🟠 Seguimiento</option>
+            <option value="urgencia">🔴 Urgencia</option>
+            <option value="nuevo">🟣 Paciente Nuevo</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Fecha *</label>
+          <input type="date" class="form-control" id="citaFecha" required>
+        </div>
+        <div class="form-group">
+          <label>Hora *</label>
+          <input type="time" class="form-control" id="citaHora" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Duración</label>
+          <select class="form-control" id="citaDuracion">
+            <option value="20">20 minutos</option>
+            <option value="30" selected>30 minutos</option>
+            <option value="45">45 minutos</option>
+            <option value="60">1 hora</option>
+            <option value="90">1.5 horas</option>
+            <option value="120">2 horas</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Estado</label>
+          <select class="form-control" id="citaEstado">
+            <option value="pendiente">⏳ Pendiente</option>
+            <option value="confirmada">✅ Confirmada</option>
+            <option value="completada">🏁 Completada</option>
+            <option value="cancelada">❌ Cancelada</option>
+            <option value="no-asistio">👻 No asistió</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Motivo / Descripción</label>
+        <input class="form-control" id="citaMotivo" placeholder="Motivo de la consulta o procedimiento">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Teléfono para recordatorio</label>
+          <input class="form-control" id="citaTel" type="tel" placeholder="809-000-0000">
+        </div>
+        <div class="form-group">
+          <label>No. de Póliza</label>
+          <input class="form-control" id="citaPoliza" placeholder="Número de póliza">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notas adicionales</label>
+        <textarea class="form-control" id="citaNotas" rows="2" placeholder="Observaciones, preparación, etc."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="cerrarModal('modalCita')">Cancelar</button>
+        <button type="submit" class="btn-primary">💾 Guardar Cita</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══ MODAL: VER CITA ═══ -->
+<div class="modal-overlay" id="modalVerCita">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">📋 Detalle de Cita</span>
+      <button class="modal-close" onclick="cerrarModal('modalVerCita')">×</button>
+    </div>
+    <div id="detalleCita" class="cita-detail"></div>
+    <div class="modal-footer" id="accionesCita"></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════
+//  STORAGE
+// ════════════════════════════════════════════
+const LS = {
+  get:(k,d=[])=>{try{return JSON.parse(localStorage.getItem(k))||d;}catch{return d;}},
+  set:(k,v)=>localStorage.setItem(k,JSON.stringify(v))
+};
+
+// ════════════════════════════════════════════
+//  SEED DEMO
+// ════════════════════════════════════════════
+function initDemo(){
+  if(LS.get('mc_citas').length > 0) return;
+  const hoy = new Date();
+  const f = (d,h,m) => { const x=new Date(hoy); x.setDate(x.getDate()+d); return x.toISOString().split('T')[0]+'T'+(String(h).padStart(2,'0'))+':'+String(m).padStart(2,'0'); };
+  const citas=[
+    {id:'CIT-001',paciente:'García Pérez, Ana',fecha:f(0,8,0),duracion:30,tipo:'consulta',estado:'confirmada',motivo:'Control postoperatorio',tel:'809-111-2222',poliza:'MAP-123',notas:''},
+    {id:'CIT-002',paciente:'López Méndez, Carlos',fecha:f(0,9,30),duracion:45,tipo:'cirugia',estado:'confirmada',motivo:'Herniorrafia Inguinal',tel:'809-333-4444',poliza:'HUM-456',notas:'Ayuno de 8 horas'},
+    {id:'CIT-003',paciente:'Rodríguez Silva, María',fecha:f(0,11,0),duracion:30,tipo:'nuevo',estado:'pendiente',motivo:'Primera consulta - Fimosis',tel:'809-555-6666',poliza:'',notas:''},
+    {id:'CIT-004',paciente:'Martínez Ruiz, Juan',fecha:f(0,14,30),duracion:20,tipo:'seguimiento',estado:'confirmada',motivo:'Seguimiento post apendicectomía',tel:'809-777-8888',poliza:'BMI-789',notas:''},
+    {id:'CIT-005',paciente:'González López, Laura',fecha:f(1,8,30),duracion:30,tipo:'consulta',estado:'pendiente',motivo:'Hernia umbilical',tel:'809-000-1111',poliza:'',notas:''},
+    {id:'CIT-006',paciente:'Hernández Cruz, Pedro',fecha:f(1,10,0),duracion:60,tipo:'cirugia',estado:'confirmada',motivo:'Orquidopexia',tel:'809-222-3333',poliza:'SEN-321',notas:'Llegar 1 hora antes'},
+    {id:'CIT-007',paciente:'Flores Díaz, Sofia',fecha:f(2,9,0),duracion:30,tipo:'consulta',estado:'confirmada',motivo:'Dolor abdominal recurrente',tel:'809-444-5555',poliza:'',notas:''},
+    {id:'CIT-008',paciente:'Torres Vega, Miguel',fecha:f(-1,8,0),duracion:30,tipo:'consulta',estado:'completada',motivo:'Control',tel:'809-666-7777',poliza:'',notas:''},
+    {id:'CIT-009',paciente:'Ramírez Luna, Isabel',fecha:f(-1,10,30),duracion:30,tipo:'seguimiento',estado:'no-asistio',motivo:'Seguimiento hernia',tel:'809-888-9999',poliza:'',notas:''},
+    {id:'CIT-010',paciente:'Sánchez Torres, Diego',fecha:f(3,8,0),duracion:45,tipo:'urgencia',estado:'confirmada',motivo:'Dolor abdominal agudo',tel:'809-100-2000',poliza:'',notas:'URGENTE'},
+    {id:'CIT-011',paciente:'García Pérez, Ana',fecha:f(5,9,0),duracion:30,tipo:'seguimiento',estado:'pendiente',motivo:'Control de herida',tel:'809-111-2222',poliza:'MAP-123',notas:''},
+    {id:'CIT-012',paciente:'López Méndez, Carlos',fecha:f(7,8,30),duracion:30,tipo:'consulta',estado:'pendiente',motivo:'Revisión',tel:'809-333-4444',poliza:'',notas:''},
+  ];
+  LS.set('mc_citas', citas);
+}
+
+// ════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════
+let vista = 'mes';
+let fechaActual = new Date();
+let fechaActual_mini = new Date();
+let filtrosTipo = new Set();
+let editingCitaId = null;
+
+// ════════════════════════════════════════════
+//  UTILIDADES
+// ════════════════════════════════════════════
+function hoyStr(){ return toStr(new Date()); }
+function toStr(d){ return d.toISOString().split('T')[0]; }
+function parseF(s){ return s ? new Date(s) : new Date(); }
+function fechaStr(d){ const x=new Date(d); return x.toLocaleDateString('es-DO',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); }
+function horaStr(s){ if(!s) return ''; const t=s.includes('T')?s.split('T')[1]:s; return t.substring(0,5); }
+function mesLabel(d){ return d.toLocaleDateString('es-DO',{month:'long',year:'numeric'}); }
+const DIAS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const DIAS_F=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+
+function tipoClass(t){ return 'tipo-'+(t||'consulta'); }
+function tipoLabel(t){
+  return {consulta:'🟢 Consulta',cirugia:'🔵 Cirugía',seguimiento:'🟠 Seguimiento',urgencia:'🔴 Urgencia',nuevo:'🟣 Paciente Nuevo'}[t]||t;
+}
+function estadoBadge(e){
+  return `<span class="badge badge-${e||'pendiente'}">${{pendiente:'⏳ Pendiente',confirmada:'✅ Confirmada',completada:'🏁 Completada',cancelada:'❌ Cancelada','no-asistio':'👻 No asistió'}[e]||e}</span>`;
+}
+
+function getCitas(){
+  let citas = LS.get('mc_citas');
+  const estadoFiltro = document.getElementById('filtroEstado')?.value||'';
+  if(filtrosTipo.size > 0) citas = citas.filter(c => filtrosTipo.has(c.tipo));
+  if(estadoFiltro) citas = citas.filter(c => c.estado === estadoFiltro);
+  return citas;
+}
+
+function updateSidebar(){
+  const citas = LS.get('mc_citas');
+  const hoy = hoyStr();
+  const inicioSemana = new Date(); inicioSemana.setDate(inicioSemana.getDate() - inicioSemana.getDay());
+  const finSemana = new Date(inicioSemana); finSemana.setDate(finSemana.getDate()+6);
+  document.getElementById('statHoy').textContent = citas.filter(c=>c.fecha.startsWith(hoy)).length;
+  document.getElementById('statSemana').textContent = citas.filter(c=>{ const f=c.fecha.split('T')[0]; return f>=toStr(inicioSemana)&&f<=toStr(finSemana); }).length;
+  document.getElementById('statPend').textContent = citas.filter(c=>c.estado==='pendiente').length;
+  ['consulta','cirugia','seguimiento','urgencia','nuevo'].forEach(t=>{
+    document.getElementById('cnt-'+t).textContent = citas.filter(c=>c.tipo===t).length;
+  });
+}
+
+// ════════════════════════════════════════════
+//  MINI CALENDARIO
+// ════════════════════════════════════════════
+function renderMiniCal(){
+  const d = new Date(fechaActual_mini.getFullYear(), fechaActual_mini.getMonth(), 1);
+  const citas = LS.get('mc_citas');
+  const hoy = hoyStr();
+  document.getElementById('miniMesLabel').textContent = d.toLocaleDateString('es-DO',{month:'short',year:'numeric'});
+  const grid = document.getElementById('miniCalGrid');
+  grid.innerHTML = DIAS.map(d=>`<div class="mini-day-name">${d[0]}</div>`).join('');
+  const primerDia = d.getDay();
+  for(let i=0;i<primerDia;i++) grid.innerHTML += `<div class="mini-day empty"></div>`;
+  const diasMes = new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+  for(let dia=1;dia<=diasMes;dia++){
+    const f = toStr(new Date(d.getFullYear(),d.getMonth(),dia));
+    const esFecha = vista==='mes'? toStr(new Date(fechaActual.getFullYear(),fechaActual.getMonth(),1))===f.substring(0,8)+f.substring(8) : toStr(fechaActual)===f;
+    const tieneCita = citas.some(c=>c.fecha.startsWith(f));
+    const clases=['mini-day', f===hoy?'today':'', tieneCita?'has-cita':'', toStr(fechaActual)===f?'selected':''].filter(Boolean).join(' ');
+    grid.innerHTML += `<div class="${clases}" onclick="irAFecha('${f}')">${dia}</div>`;
+  }
+}
+
+function miniNavMes(d){ fechaActual_mini.setMonth(fechaActual_mini.getMonth()+d); renderMiniCal(); }
+function irAFecha(f){ fechaActual=new Date(f+'T12:00:00'); fechaActual_mini=new Date(fechaActual); renderVista(); renderMiniCal(); }
+
+// ════════════════════════════════════════════
+//  NAVEGACIÓN DE VISTAS
+// ════════════════════════════════════════════
+function cambiarVista(v, btn){
+  vista=v;
+  document.querySelectorAll('.view-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderVista();
+}
+function navPeriodo(d){
+  if(vista==='mes'){ fechaActual.setMonth(fechaActual.getMonth()+d); }
+  else if(vista==='semana'){ fechaActual.setDate(fechaActual.getDate()+d*7); }
+  else{ fechaActual.setDate(fechaActual.getDate()+d); }
+  renderVista(); renderMiniCal();
+}
+function irHoy(){ fechaActual=new Date(); fechaActual_mini=new Date(); renderVista(); renderMiniCal(); }
+
+function renderVista(){
+  if(vista==='mes') renderMes();
+  else if(vista==='semana') renderSemana();
+  else if(vista==='dia') renderDia();
+  else renderLista();
+  updateSidebar();
+}
+
+// ════════════════════════════════════════════
+//  VISTA MENSUAL
+// ════════════════════════════════════════════
+function renderMes(){
+  const yr=fechaActual.getFullYear(), mo=fechaActual.getMonth();
+  document.getElementById('currentPeriod').textContent = new Date(yr,mo,1).toLocaleDateString('es-DO',{month:'long',year:'numeric'}).toUpperCase();
+  const citas=getCitas();
+  const primerDia=new Date(yr,mo,1).getDay();
+  const diasMes=new Date(yr,mo+1,0).getDate();
+  const hoy=hoyStr();
+  let html=`<div class="cal-month"><div class="cal-week-header">${DIAS.map(d=>`<div>${d}</div>`).join('')}</div><div class="cal-grid">`;
+  // Días del mes anterior
+  const diasAnt=new Date(yr,mo,0).getDate();
+  for(let i=primerDia-1;i>=0;i--){
+    const f=toStr(new Date(yr,mo-1,diasAnt-i));
+    html+=`<div class="cal-cell other-month" onclick="irAFecha('${f}')"><span class="day-num">${diasAnt-i}</span></div>`;
+  }
+  for(let d=1;d<=diasMes;d++){
+    const f=toStr(new Date(yr,mo,d));
+    const citasDia=citas.filter(c=>c.fecha.startsWith(f)).sort((a,b)=>a.fecha.localeCompare(b.fecha));
+    const clases=['cal-cell', f===hoy?'today':''].filter(Boolean).join(' ');
+    html+=`<div class="${clases}" onclick="irAFecha('${f}')"><span class="day-num">${d}</span>`;
+    const max=3;
+    citasDia.slice(0,max).forEach(c=>{
+      html+=`<div class="cita-pill tipo-${c.tipo}" onclick="event.stopPropagation();verCita('${c.id}')">${horaStr(c.fecha)} ${c.paciente.split(',')[0]}</div>`;
+    });
+    if(citasDia.length>max) html+=`<div class="more-citas">+${citasDia.length-max} más</div>`;
+    html+=`</div>`;
+  }
+  // Días del mes siguiente
+  const celdasUsadas=primerDia+diasMes;
+  const celdasRestantes=(7-celdasUsadas%7)%7;
+  for(let d=1;d<=celdasRestantes;d++){
+    const f=toStr(new Date(yr,mo+1,d));
+    html+=`<div class="cal-cell other-month" onclick="irAFecha('${f}')"><span class="day-num">${d}</span></div>`;
+  }
+  html+=`</div></div>`;
+  document.getElementById('calContainer').innerHTML=html;
+}
+
+// ════════════════════════════════════════════
+//  VISTA SEMANAL
+// ════════════════════════════════════════════
+function renderSemana(){
+  const ini=new Date(fechaActual);
+  ini.setDate(ini.getDate()-ini.getDay());
+  const fin=new Date(ini); fin.setDate(fin.getDate()+6);
+  document.getElementById('currentPeriod').textContent = `${ini.toLocaleDateString('es-DO',{day:'numeric',month:'short'})} – ${fin.toLocaleDateString('es-DO',{day:'numeric',month:'short',year:'numeric'})}`;
+  const citas=getCitas();
+  const hoy=hoyStr();
+  const horas=[]; for(let h=6;h<=20;h++) horas.push(h);
+
+  let html=`<div class="cal-week"><div class="cal-week-times"><div class="week-col-header" style="background:var(--navy);"></div>`;
+  horas.forEach(h=>html+=`<div class="time-slot hour">${String(h).padStart(2,'0')}:00</div><div class="time-slot"></div>`);
+  html+=`</div>`;
+  for(let i=0;i<7;i++){
+    const dia=new Date(ini); dia.setDate(dia.getDate()+i);
+    const f=toStr(dia);
+    const esHoy=f===hoy;
+    html+=`<div class="cal-week-col"><div class="week-col-header${esHoy?' today-col':''}"><div class="wd">${DIAS[dia.getDay()]}</div>${dia.getDate()}</div>`;
+    const citasDia=citas.filter(c=>c.fecha.startsWith(f)).sort((a,b)=>a.fecha.localeCompare(b.fecha));
+    horas.forEach(h=>{
+      html+=`<div class="week-cell hour-mark" style="position:relative;" onclick="citaRapida('${f}','${String(h).padStart(2,'0')}:00')">`;
+      citasDia.filter(c=>{ const ch=parseInt(horaStr(c.fecha).split(':')[0]); return ch===h; }).forEach(c=>{
+        html+=`<div class="week-event tipo-${c.tipo}" onclick="event.stopPropagation();verCita('${c.id}')" style="top:2px;height:42px;"><strong>${horaStr(c.fecha)}</strong> ${c.paciente.split(',')[0]}</div>`;
+      });
+      html+=`</div><div class="week-cell"></div>`;
+    });
+    html+=`</div>`;
+  }
+  html+=`</div>`;
+  document.getElementById('calContainer').innerHTML=html;
+}
+
+// ════════════════════════════════════════════
+//  VISTA DIARIA
+// ════════════════════════════════════════════
+function renderDia(){
+  const f=toStr(fechaActual);
+  document.getElementById('currentPeriod').textContent = fechaStr(fechaActual);
+  const citas=getCitas().filter(c=>c.fecha.startsWith(f)).sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  const horas=[]; for(let h=6;h<=20;h++) horas.push(h);
+  let html=`<div class="cal-day"><div class="cal-week-times"><div class="day-col-header">Horario</div>`;
+  horas.forEach(h=>html+=`<div class="time-slot hour">${String(h).padStart(2,'0')}:00</div><div class="time-slot"></div>`);
+  html+=`</div><div class="cal-week-col"><div class="day-col-header">📅 ${new Date(f+'T12:00:00').toLocaleDateString('es-DO',{weekday:'long',day:'numeric',month:'long'})}</div>`;
+  horas.forEach(h=>{
+    html+=`<div class="week-cell hour-mark" style="position:relative;" onclick="citaRapida('${f}','${String(h).padStart(2,'0')}:00')">`;
+    citas.filter(c=>parseInt(horaStr(c.fecha).split(':')[0])===h).forEach(c=>{
+      const dur=c.duracion||30;
+      html+=`<div class="week-event tipo-${c.tipo}" onclick="event.stopPropagation();verCita('${c.id}')" style="top:2px;height:${Math.min(dur*1.5,90)}px;padding:4px 8px;">
+        <div><strong>${horaStr(c.fecha)}</strong> · ${c.duracion}min</div>
+        <div>${c.paciente}</div>
+        <div style="font-size:.68rem;">${c.motivo||''}</div>
+      </div>`;
+    });
+    html+=`</div><div class="week-cell"></div>`;
+  });
+  html+=`</div></div>`;
+  document.getElementById('calContainer').innerHTML=html;
+}
+
+// ════════════════════════════════════════════
+//  VISTA LISTA
+// ════════════════════════════════════════════
+function renderLista(){
+  document.getElementById('currentPeriod').textContent='Próximas citas';
+  const citas=getCitas().filter(c=>c.fecha>=hoyStr()+'T00:00').sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  const byDay={};
+  citas.forEach(c=>{ const d=c.fecha.split('T')[0]; if(!byDay[d]) byDay[d]=[]; byDay[d].push(c); });
+  let html='<div class="cal-list">';
+  if(!Object.keys(byDay).length){ html+='<div style="text-align:center;padding:60px;color:var(--text-light);"><div style="font-size:3rem;">📅</div><p>Sin citas próximas</p></div>'; }
+  else {
+    Object.entries(byDay).forEach(([d,cs])=>{
+      const eHoy=d===hoyStr();
+      html+=`<div class="list-day-group"><div class="list-day-title">${eHoy?'🔵 HOY — ':''} ${fechaStr(new Date(d+'T12:00:00'))} <span style="background:var(--teal);color:white;border-radius:20px;padding:1px 9px;font-size:.75rem;">${cs.length}</span></div>`;
+      cs.forEach(c=>{
+        html+=`<div class="list-event" onclick="verCita('${c.id}')">
+          <div class="list-event-time">${horaStr(c.fecha)}<br><span style="font-size:.72rem;color:var(--text-light);">${c.duracion||30}min</span></div>
+          <div class="list-event-bar tipo-${c.tipo}" style="background:${{consulta:'#27AE60',cirugia:'#2E86AB',seguimiento:'#E67E22',urgencia:'#E74C3C',nuevo:'#8E44AD'}[c.tipo]||'#27AE60'};"></div>
+          <div class="list-event-content">
+            <div class="list-event-title">${c.paciente}</div>
+            <div class="list-event-meta">${tipoLabel(c.tipo)} · ${c.motivo||'Sin motivo especificado'} ${c.poliza?`· Póliza: ${c.poliza}`:''}</div>
+          </div>
+          <div class="list-event-actions">
+            ${estadoBadge(c.estado)}
+          </div>
+        </div>`;
+      });
+      html+=`</div>`;
+    });
+  }
+  html+='</div>';
+  document.getElementById('calContainer').innerHTML=html;
+}
+
+// ════════════════════════════════════════════
+//  FILTROS
+// ════════════════════════════════════════════
+function toggleFiltro(tipo, el){
+  if(filtrosTipo.has(tipo)){ filtrosTipo.delete(tipo); el.style.opacity='1'; el.style.background=''; }
+  else { filtrosTipo.add(tipo); el.style.background='var(--light)'; el.style.fontWeight='700'; }
+  renderVista();
+}
+
+// ════════════════════════════════════════════
+//  MODAL NUEVA CITA
+// ════════════════════════════════════════════
+function abrirNuevaCita(fecha='', hora=''){
+  editingCitaId=null;
+  document.getElementById('tituloModalCita').textContent='📅 Nueva Cita';
+  document.getElementById('citaFecha').value=fecha||hoyStr();
+  document.getElementById('citaHora').value=hora||'08:00';
+  document.getElementById('citaTipo').value='consulta';
+  document.getElementById('citaEstado').value='pendiente';
+  document.getElementById('citaDuracion').value='30';
+  document.getElementById('citaMotivo').value='';
+  document.getElementById('citaTel').value='';
+  document.getElementById('citaPoliza').value='';
+  document.getElementById('citaNotas').value='';
+  cargarPacientes();
+  document.getElementById('modalCita').classList.add('open');
+}
+
+function citaRapida(f, h){ abrirNuevaCita(f, h); }
+
+function cargarPacientes(){
+  const sel=document.getElementById('citaPaciente');
+  sel.innerHTML='<option value="">Seleccionar...</option>';
+  const pac=LS.get('mc_pacientes');
+  pac.forEach(p=>sel.innerHTML+=`<option value="${p.apellido||''}, ${p.nombre||''}">${p.apellido||''}, ${p.nombre||''}</option>`);
+  if(!pac.length){
+    ['García, Ana','López, Carlos','Rodríguez, María','Martínez, Juan','González, Laura','Torres, Miguel'].forEach(n=>
+      sel.innerHTML+=`<option value="${n}">${n}</option>`);
+  }
+}
+
+function guardarCita(e){
+  e.preventDefault();
+  const citas=LS.get('mc_citas');
+  const f=document.getElementById('citaFecha').value;
+  const h=document.getElementById('citaHora').value;
+  const datos={
+    paciente:document.getElementById('citaPaciente').value,
+    fecha:f+'T'+h,
+    duracion:parseInt(document.getElementById('citaDuracion').value),
+    tipo:document.getElementById('citaTipo').value,
+    estado:document.getElementById('citaEstado').value,
+    motivo:document.getElementById('citaMotivo').value,
+    tel:document.getElementById('citaTel').value,
+    poliza:document.getElementById('citaPoliza').value,
+    notas:document.getElementById('citaNotas').value,
+  };
+  if(editingCitaId){
+    const idx=citas.findIndex(c=>c.id===editingCitaId);
+    if(idx>=0) citas[idx]={...citas[idx],...datos};
+  } else {
+    const ctr=LS.get('mc_counters',{});
+    ctr.cita=(ctr.cita||0)+1;
+    LS.set('mc_counters',ctr);
+    citas.push({id:`CIT-${String(ctr.cita).padStart(3,'0')}`,...datos});
+  }
+  LS.set('mc_citas',citas);
+  cerrarModal('modalCita');
+  renderVista();
+  renderMiniCal();
+}
+
+// ════════════════════════════════════════════
+//  VER / EDITAR CITA
+// ════════════════════════════════════════════
+function verCita(id){
+  const c=LS.get('mc_citas').find(x=>x.id===id);
+  if(!c) return;
+  document.getElementById('detalleCita').innerHTML=`
+    <div class="detail-row"><div class="detail-icon">👶</div><div><div class="detail-label">Paciente</div><div class="detail-value"><strong>${c.paciente}</strong></div></div></div>
+    <div class="detail-row"><div class="detail-icon">📅</div><div><div class="detail-label">Fecha y Hora</div><div class="detail-value">${fechaStr(new Date(c.fecha))} · <strong>${horaStr(c.fecha)}</strong> (${c.duracion||30} min)</div></div></div>
+    <div class="detail-row"><div class="detail-icon">🏷️</div><div><div class="detail-label">Tipo</div><div class="detail-value">${tipoLabel(c.tipo)}</div></div></div>
+    <div class="detail-row"><div class="detail-icon">📊</div><div><div class="detail-label">Estado</div><div class="detail-value">${estadoBadge(c.estado)}</div></div></div>
+    ${c.motivo?`<div class="detail-row"><div class="detail-icon">📝</div><div><div class="detail-label">Motivo</div><div class="detail-value">${c.motivo}</div></div></div>`:''}
+    ${c.poliza?`<div class="detail-row"><div class="detail-icon">🏥</div><div><div class="detail-label">No. Póliza</div><div class="detail-value">${c.poliza}</div></div></div>`:''}
+    ${c.tel?`<div class="detail-row"><div class="detail-icon">📞</div><div><div class="detail-label">Teléfono</div><div class="detail-value">${c.tel}</div></div></div>`:''}
+    ${c.notas?`<div class="detail-row"><div class="detail-icon">💬</div><div><div class="detail-label">Notas</div><div class="detail-value">${c.notas}</div></div></div>`:''}
+  `;
+  document.getElementById('accionesCita').innerHTML=`
+    <button class="btn-danger" onclick="cancelarCita('${c.id}')">❌ Cancelar</button>
+    ${c.estado==='pendiente'?`<button class="btn-primary" style="background:var(--green);" onclick="confirmarCita('${c.id}')">✅ Confirmar</button>`:''}
+    ${c.estado==='confirmada'?`<button class="btn-primary" style="background:var(--accent);" onclick="completarCita('${c.id}')">🏁 Completar</button>`:''}
+    ${c.tel?`<button class="btn-wa" onclick="enviarWA('${c.tel}','${c.paciente}','${horaStr(c.fecha)}')">💬 WhatsApp</button>`:''}
+    <button class="btn-secondary" onclick="editarCita('${c.id}')">✏️ Editar</button>
+    <button class="btn-secondary" style="background:#6B7280;" onclick="imprimirTarjetaCita('${c.id}')">🖨️ Tarjeta</button>
+  `;
+  document.getElementById('modalVerCita').classList.add('open');
+}
+
+function editarCita(id){
+  const c=LS.get('mc_citas').find(x=>x.id===id);
+  if(!c) return;
+  cerrarModal('modalVerCita');
+  editingCitaId=id;
+  document.getElementById('tituloModalCita').textContent='✏️ Editar Cita';
+  cargarPacientes();
+  setTimeout(()=>{
+    document.getElementById('citaPaciente').value=c.paciente;
+    document.getElementById('citaFecha').value=c.fecha.split('T')[0];
+    document.getElementById('citaHora').value=horaStr(c.fecha);
+    document.getElementById('citaDuracion').value=c.duracion||30;
+    document.getElementById('citaTipo').value=c.tipo;
+    document.getElementById('citaEstado').value=c.estado;
+    document.getElementById('citaMotivo').value=c.motivo||'';
+    document.getElementById('citaTel').value=c.tel||'';
+    document.getElementById('citaPoliza').value=c.poliza||'';
+    document.getElementById('citaNotas').value=c.notas||'';
+  },50);
+  document.getElementById('modalCita').classList.add('open');
+}
+
+function cambiarEstadoCita(id, estado){
+  const citas=LS.get('mc_citas');
+  const idx=citas.findIndex(c=>c.id===id);
+  if(idx>=0){ citas[idx].estado=estado; LS.set('mc_citas',citas); }
+  cerrarModal('modalVerCita'); renderVista(); renderMiniCal();
+}
+function confirmarCita(id){ cambiarEstadoCita(id,'confirmada'); }
+function completarCita(id){ cambiarEstadoCita(id,'completada'); }
+function cancelarCita(id){ if(confirm('¿Cancelar esta cita?')) cambiarEstadoCita(id,'cancelada'); }
+
+function enviarWA(tel, paciente, hora){
+  const num=tel.replace(/\D/g,'');
+  const msg=encodeURIComponent(`Estimado/a paciente ${paciente}, le recordamos que tiene una cita en el consultorio mañana a las ${hora}. Por favor confirme su asistencia. Gracias.`);
+  window.open(`https://wa.me/${num}?text=${msg}`, '_blank');
+}
+
+function cerrarModal(id){ document.getElementById(id).classList.remove('open'); }
+
+// ════════════════════════════════════════════
+//  IMPRIMIR TARJETA / RECORDATORIO DE CITA
+// ════════════════════════════════════════════
+function imprimirTarjetaCita(id){
+  const c = LS.get('mc_citas').find(x=>x.id===id);
+  if(!c) return;
+
+  const M = (typeof MEDICO !== 'undefined') ? MEDICO : {
+    nombre:'Dr. Lorenzo Ernesto Otaño Santiago',
+    nombreCorto:'Dr. Lorenzo E. Otaño S.',
+    especialidad:'Cirujano Pediátrico · Neonatólogo · Laparoscopista',
+    whatsapp:'829-383-4449',
+    email:'ernesto1504@hotmail.com',
+    exequatur:'573-05',
+    colegiatura:'19077',
+    lema:'Cuidando con precisión la salud de tu hijo.',
+    ciudad:'Santo Domingo, República Dominicana',
+  };
+
+  const _LOGO = (typeof LOGO_REAL !== 'undefined' && LOGO_REAL)
+    ? `<img src="${LOGO_REAL}" style="height:60px;width:auto;display:block;">`
+    : ((typeof LOGO_SVG !== 'undefined') ? LOGO_SVG.replace('width="80" height="80"','width="60" height="60"') : '');
+
+  const _CSS = (typeof getBrandingCSS !== 'undefined') ? getBrandingCSS() : '';
+
+  const fechaObj = new Date(c.fecha);
+  const diasSemana = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const fechaLarga = `${diasSemana[fechaObj.getDay()]}, ${fechaObj.getDate()} de ${meses[fechaObj.getMonth()]} de ${fechaObj.getFullYear()}`;
+  const horaCita = horaStr(c.fecha);
+  const durMin = c.duracion || 30;
+  const tipoTexto = tipoLabel(c.tipo||'consulta');
+
+  const instrucciones = {
+    'consulta':        'Favor llegar 10 minutos antes. Traer carnet de seguro médico.',
+    'control':         'Traer exámenes o estudios previos si los tiene.',
+    'postoperatorio':  'Traer medicamentos actuales. Favor acudir en ayunas si el médico lo indicó.',
+    'cirugia':         'Acudir en ayunas. Traer exámenes prequirúrgicos y carta de autorización del seguro.',
+    'emergencia':      'Acudir de inmediato. Para emergencias llamar al WhatsApp del médico.',
+    'otro':            'Traer carnet de seguro médico y exámenes previos si los tiene.',
+  };
+  const instrTipo = instrucciones[c.tipo] || instrucciones['consulta'];
+
+  const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Tarjeta de Cita — ${c.paciente}</title>
+<style>
+${_CSS}
+body { max-width: 680px; padding: 24px 28px; }
+
+/* Tarjeta principal */
+.tarjeta {
+  border: 2px solid #1B5FA8;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(27,95,168,.15);
+}
+.tarjeta-header {
+  background: linear-gradient(135deg, #1B5FA8 0%, #2E9DD4 100%);
+  color: white;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.tarjeta-header .logo { flex-shrink: 0; }
+.tarjeta-header .info-doc h2 {
+  font-size: 1.1rem; font-weight: 800; margin: 0 0 3px;
+  letter-spacing: -.2px;
+}
+.tarjeta-header .info-doc p {
+  font-size: .8rem; opacity: .9; margin: 1px 0;
+}
+.tarjeta-body { padding: 22px 24px; }
+
+/* Nombre paciente */
+.nombre-pac {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #1A2A4A;
+  margin-bottom: 18px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #EBF4FB;
+}
+.nombre-pac span { color: #1B5FA8; }
+
+/* Grid de datos */
+.dato-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.dato-item {
+  background: #EBF4FB;
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+.dato-item.full { grid-column: 1 / -1; }
+.dato-item.accent-box {
+  background: linear-gradient(135deg,#1B5FA8,#2E9DD4);
+  color: white;
+}
+.dato-label {
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: #6B7280;
+  margin-bottom: 3px;
+  font-weight: 600;
+}
+.dato-item.accent-box .dato-label { color: rgba(255,255,255,.8); }
+.dato-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1A2A4A;
+}
+.dato-item.accent-box .dato-value { color: white; font-size: 1.2rem; }
+
+/* Instrucciones */
+.instrucciones {
+  background: #FFF8F3;
+  border-left: 4px solid #E07B30;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 14px 0;
+}
+.instrucciones strong { color: #E07B30; font-size: .82rem; text-transform:uppercase; letter-spacing:.5px; }
+.instrucciones p { margin: 5px 0 0; font-size: .88rem; color: #444; }
+
+/* Contacto footer */
+.contacto-bar {
+  background: #1A2A4A;
+  color: white;
+  display: flex;
+  justify-content: space-around;
+  padding: 12px 20px;
+  font-size: .82rem;
+  gap: 10px;
+}
+.contacto-bar span { opacity: .85; }
+.contacto-bar strong { color: #2E9DD4; }
+
+/* Lema */
+.lema {
+  text-align: center;
+  padding: 10px;
+  font-style: italic;
+  color: #1B5FA8;
+  font-size: .85rem;
+  font-weight: 600;
+}
+
+@media print {
+  body { padding: 8px 12px; }
+  .tarjeta { box-shadow: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="tarjeta">
+
+  <!-- Encabezado del médico -->
+  <div class="tarjeta-header">
+    <div class="logo">${_LOGO}</div>
+    <div class="info-doc">
+      <h2>${M.nombre}.</h2>
+      <p>${M.especialidad}</p>
+      <p>Exequátur: ${M.exequatur} &nbsp;·&nbsp; Colegiatura: ${M.colegiatura}</p>
+    </div>
+  </div>
+
+  <!-- Cuerpo -->
+  <div class="tarjeta-body">
+
+    <div class="nombre-pac">
+      Cita para: <span>${c.paciente}</span>
+    </div>
+
+    <div class="dato-grid">
+
+      <!-- Fecha — destacada -->
+      <div class="dato-item accent-box full">
+        <div class="dato-label">📅 Fecha de la cita</div>
+        <div class="dato-value">${fechaLarga}</div>
+      </div>
+
+      <div class="dato-item">
+        <div class="dato-label">⏰ Hora</div>
+        <div class="dato-value">${horaCita}</div>
+      </div>
+
+      <div class="dato-item">
+        <div class="dato-label">⏱ Duración estimada</div>
+        <div class="dato-value">${durMin} minutos</div>
+      </div>
+
+      <div class="dato-item">
+        <div class="dato-label">🏷️ Tipo de consulta</div>
+        <div class="dato-value">${tipoTexto}</div>
+      </div>
+
+      ${c.poliza ? `
+      <div class="dato-item">
+        <div class="dato-label">🏥 No. Póliza</div>
+        <div class="dato-value">${c.poliza}</div>
+      </div>` : ''}
+
+      ${c.motivo ? `
+      <div class="dato-item full">
+        <div class="dato-label">📝 Motivo de consulta</div>
+        <div class="dato-value" style="font-size:.95rem; font-weight:500;">${c.motivo}</div>
+      </div>` : ''}
+
+    </div>
+
+    <!-- Instrucciones -->
+    <div class="instrucciones">
+      <strong>📋 Indicaciones importantes</strong>
+      <p>${instrTipo}</p>
+    </div>
+
+    <p style="font-size:.8rem; color:#6B7280; margin-top:6px; text-align:center;">
+      Si no puede asistir, por favor avise con al menos <strong>24 horas de anticipación</strong> al WhatsApp del médico.
+    </p>
+  </div>
+
+  <!-- Barra de contacto -->
+  <div class="contacto-bar">
+    <span>💬 WhatsApp: <strong>${M.whatsapp}</strong></span>
+    <span>✉️ <strong>${M.email}</strong></span>
+    <span>📍 <strong>${M.ciudad}</strong></span>
+  </div>
+
+</div>
+
+<div class="lema" style="margin-top:12px;">"${M.lema}"</div>
+
+<script>
+  window.onload = function() { setTimeout(function(){ window.print(); }, 350); };
+</script>
+</body>
+</html>`;
+
+  const win = window.open('', '_blank', 'width=750,height=650');
+  win.document.write(html);
+  win.document.close();
+}
+
+// ════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded',()=>{
+  // Modo embebido: oculta el header propio cuando carga dentro del iframe de index.html
+  if (new URLSearchParams(location.search).get('embed') === '1') {
+    const hdr = document.querySelector('header');
+    if (hdr) hdr.style.display = 'none';
+    // Ajustar altura de la app para ocupar el 100% del iframe
+    const app = document.querySelector('.app');
+    if (app) app.style.minHeight = '100vh';
+  } else {
+    if (typeof _refreshLogoInDOM !== 'undefined') {
+      _refreshLogoInDOM();
+    } else {
+      const hdrIcon = document.getElementById('hdr-icon');
+      if (hdrIcon && typeof LOGO_SVG_SMALL !== 'undefined') hdrIcon.innerHTML = LOGO_SVG_SMALL;
+    }
+  }
+  initDemo();
+  renderVista();
+  renderMiniCal();
+  updateSidebar();
+});
+</script>
+</body>
+</html>

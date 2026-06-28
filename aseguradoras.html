@@ -1,0 +1,2084 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Módulo de Aseguradoras — Consultorio Pediátrico</title>
+<style>
+  :root {
+    --navy: #1B3A5C; --teal: #0E7C7B; --accent: #2E86AB;
+    --light: #EAF4F4; --green: #27AE60; --orange: #E67E22;
+    --red: #E74C3C; --gray: #95A5A6; --white: #FFFFFF;
+    --bg: #F0F4F8; --card: #FFFFFF; --border: #D5E8E8;
+    --text: #2C3E50; --text-light: #7F8C8D;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  header {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--teal) 100%);
+    color: white; padding: 0 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px; box-shadow: 0 2px 12px rgba(0,0,0,.25);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; font-size: 1.1rem; font-weight: 700; }
+  .brand-icon { background: rgba(255,255,255,.2); border-radius: 10px; width: 38px; height: 38px;
+    display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+  .nav-links { display: flex; gap: 8px; }
+  .nav-links a { color: rgba(255,255,255,.85); text-decoration: none; padding: 8px 14px;
+    border-radius: 8px; font-size: .88rem; transition: background .2s; }
+  .nav-links a:hover, .nav-links a.active { background: rgba(255,255,255,.2); color: white; }
+  .btn-back { background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
+    color: white; padding: 7px 16px; border-radius: 8px; cursor: pointer;
+    font-size: .85rem; text-decoration: none; display: flex; align-items: center; gap: 6px; transition: background .2s; }
+  .btn-back:hover { background: rgba(255,255,255,.25); }
+
+  main { max-width: 1400px; margin: 0 auto; padding: 24px; }
+
+  /* ── LAYOUT ── */
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+  .page-title { font-size: 1.4rem; font-weight: 800; color: var(--navy); }
+  .page-title span { font-size: .9rem; font-weight: 400; color: var(--text-light); margin-left: 8px; }
+
+  .two-col { display: grid; grid-template-columns: 320px 1fr; gap: 20px; }
+
+  /* ── SIDEBAR ── */
+  .sidebar-card { background: var(--card); border-radius: 14px; border: 1px solid var(--border);
+    box-shadow: 0 1px 8px rgba(0,0,0,.06); overflow: hidden; }
+  .sidebar-header { background: var(--navy); color: white; padding: 16px 18px;
+    font-weight: 700; font-size: .95rem; display: flex; align-items: center; justify-content: space-between; }
+  .sidebar-search { padding: 12px; border-bottom: 1px solid var(--border); }
+  .sidebar-search input { width: 100%; border: 1.5px solid var(--border); border-radius: 8px;
+    padding: 9px 12px; font-size: .88rem; color: var(--text); }
+  .sidebar-search input:focus { outline: none; border-color: var(--teal); }
+  .aseg-list { max-height: calc(100vh - 260px); overflow-y: auto; }
+  .aseg-item { padding: 14px 18px; border-bottom: 1px solid var(--border); cursor: pointer;
+    transition: background .15s; display: flex; align-items: center; gap: 12px; }
+  .aseg-item:hover { background: var(--light); }
+  .aseg-item.active { background: var(--light); border-left: 4px solid var(--teal); }
+  .aseg-item:last-child { border-bottom: none; }
+  .aseg-avatar { width: 40px; height: 40px; border-radius: 10px; background: var(--teal);
+    display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+    font-weight: 800; color: white; flex-shrink: 0; font-size: .95rem; }
+  .aseg-info { flex: 1; min-width: 0; }
+  .aseg-name { font-weight: 700; font-size: .9rem; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .aseg-sub { font-size: .78rem; color: var(--text-light); }
+  .aseg-badge { background: var(--light); color: var(--teal); font-size: .72rem; font-weight: 700;
+    padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+
+  /* ── MAIN PANEL ── */
+  .panel { display: flex; flex-direction: column; gap: 20px; }
+
+  .card { background: var(--card); border-radius: 14px; border: 1px solid var(--border);
+    box-shadow: 0 1px 8px rgba(0,0,0,.06); overflow: hidden; }
+  .card-header { padding: 18px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .card-title { font-size: 1rem; font-weight: 700; color: var(--navy); display: flex; align-items: center; gap: 8px; }
+  .card-body { padding: 20px; }
+
+  /* ── TABS ── */
+  .tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 20px; }
+  .tab-btn { padding: 11px 20px; border: none; background: transparent;
+    font-size: .88rem; font-weight: 600; color: var(--text-light); cursor: pointer;
+    border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all .2s; }
+  .tab-btn.active { color: var(--teal); border-bottom-color: var(--teal); }
+  .tab-btn:hover:not(.active) { color: var(--navy); background: var(--light); }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* ── STATS ROW ── */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat-mini { background: var(--bg); border-radius: 10px; padding: 14px; border: 1px solid var(--border); text-align: center; }
+  .stat-mini .val { font-size: 1.4rem; font-weight: 800; color: var(--navy); }
+  .stat-mini .lbl { font-size: .75rem; color: var(--text-light); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+
+  /* ── FORM GRID ── */
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: .85rem; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
+  .form-control { width: 100%; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 12px;
+    font-size: .9rem; color: var(--text); transition: border-color .2s; }
+  .form-control:focus { outline: none; border-color: var(--teal); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .btn-primary { background: var(--teal); color: white; border: none; padding: 9px 20px;
+    border-radius: 8px; font-size: .88rem; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; gap: 6px; transition: background .2s; }
+  .btn-primary:hover { background: var(--navy); }
+  .btn-secondary { background: white; color: var(--text); border: 1.5px solid var(--border);
+    padding: 9px 18px; border-radius: 8px; font-size: .88rem; cursor: pointer; font-weight: 600; }
+  .btn-secondary:hover { border-color: var(--gray); }
+  .btn-danger { background: var(--red); color: white; border: none; padding: 8px 16px;
+    border-radius: 8px; font-size: .85rem; cursor: pointer; font-weight: 600; }
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn-sm { padding: 6px 14px; font-size: .8rem; }
+
+  /* ── TABLES ── */
+  table { width: 100%; border-collapse: collapse; font-size: .87rem; }
+  thead th { text-align: left; padding: 10px 12px; font-size: .77rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .5px; color: var(--text-light);
+    border-bottom: 2px solid var(--border); background: var(--bg); }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--light); }
+  tbody td { padding: 11px 12px; }
+  .badge-status { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px;
+    border-radius: 20px; font-size: .74rem; font-weight: 600; }
+  .badge-pendiente { background: #FDEBD0; color: #B7770D; }
+  .badge-aprobado { background: #D5F5E3; color: #1E8449; }
+  .badge-rechazado { background: #FADBD8; color: #922B21; }
+  .badge-en-proceso { background: #D6EAF8; color: #1A5276; }
+  .badge-enviado { background: #E8DAEF; color: #6C3483; }
+  .amount { font-weight: 700; font-family: monospace; }
+  .amount.credit { color: var(--green); }
+
+  /* ── SOLICITUD BUILDER ── */
+  .template-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .template-card { background: var(--bg); border: 2px solid var(--border); border-radius: 12px;
+    padding: 16px; cursor: pointer; transition: all .2s; text-align: center; }
+  .template-card:hover { border-color: var(--teal); background: var(--light); }
+  .template-card.selected { border-color: var(--teal); background: var(--light); box-shadow: 0 0 0 3px rgba(14,124,123,.15); }
+  .template-card .icon { font-size: 2rem; margin-bottom: 8px; }
+  .template-card .name { font-size: .85rem; font-weight: 700; color: var(--navy); }
+  .template-card .desc { font-size: .75rem; color: var(--text-light); margin-top: 4px; }
+
+  /* ── PROGRESS TRACKER ── */
+  .progress-track { display: flex; align-items: center; gap: 0; margin: 20px 0; }
+  .progress-step { display: flex; flex-direction: column; align-items: center; flex: 1; position: relative; }
+  .progress-step:not(:last-child)::after { content:''; position: absolute; top: 18px; left: 50%;
+    width: 100%; height: 2px; background: var(--border); z-index: 0; }
+  .progress-step.done::after { background: var(--green); }
+  .progress-step.active::after { background: linear-gradient(to right, var(--teal), var(--border)); }
+  .step-circle { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: .85rem; font-weight: 700; z-index: 1;
+    background: var(--border); color: var(--text-light); transition: all .3s; }
+  .progress-step.done .step-circle { background: var(--green); color: white; }
+  .progress-step.active .step-circle { background: var(--teal); color: white; box-shadow: 0 0 0 4px rgba(14,124,123,.2); }
+  .step-label { font-size: .72rem; font-weight: 600; color: var(--text-light); margin-top: 6px; text-align: center; max-width: 80px; }
+  .progress-step.done .step-label, .progress-step.active .step-label { color: var(--navy); }
+
+  /* ── EMPTY STATE ── */
+  .empty { text-align: center; padding: 40px; color: var(--text-light); }
+  .empty .icon { font-size: 3rem; margin-bottom: 12px; }
+
+  /* ── MODAL ── */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1000;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    opacity: 0; pointer-events: none; transition: opacity .25s; }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal { background: white; border-radius: 16px; padding: 28px; max-width: 760px; width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3); transform: translateY(20px); transition: transform .25s;
+    max-height: 90vh; overflow-y: auto; }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .modal-title { font-size: 1.1rem; font-weight: 700; color: var(--navy); }
+  .modal-close { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--gray); }
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+  /* ── PRINT DOCUMENT ── */
+  @media print { header, .sidebar-card, .tabs, nav { display: none !important; } }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } .stats-row { grid-template-columns: repeat(2,1fr); } }
+  @media (max-width: 500px) { .form-row { grid-template-columns: 1fr; } .form-row-3 { grid-template-columns: 1fr; } }
+
+  /* ── AGING INDICATORS ── */
+  .age-ok { color: var(--green); font-weight: 700; }
+  .age-warn { color: var(--orange); font-weight: 700; }
+  .age-crit { color: var(--red); font-weight: 700; }
+  .badge-pagado { background: #D5F5E3; color: #1E8449; }
+  /* ── GLOBAL TABS ── */
+  .gtab { display: none; }
+  .gtab.active { display: block; }
+  /* ── KPI CARDS ── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 16px; }
+  .kpi-card { border-radius: 10px; padding: 14px 16px; border: 1.5px solid; }
+  .kpi-card .kv { font-size: 1.6rem; font-weight: 800; line-height: 1.1; }
+  .kpi-card .kl { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-top: 4px; }
+  /* ── QUICK-STATUS DROPDOWN ── */
+  .qs-btn { background: none; border: 1px solid var(--border); border-radius: 5px; padding: 2px 8px; font-size: .76rem; cursor: pointer; font-weight: 600; }
+  /* ── ACCOUNT TABLE ── */
+  .acct-row-total { background: var(--light); font-weight: 700; }
+</style>
+</head>
+<body>
+<script src="branding.js"></script>
+
+<header>
+  <div class="brand">
+    <div class="brand-icon" id="hdr-icon" style="background:transparent;padding:0;"></div>
+    <div class="brand-text" id="hdr-text"><span>Dr. Lorenzo E. Otaño S.</span></div>
+  </div>
+  <nav class="nav-links">
+    <a href="index.html">Dashboard</a>
+    <a href="agenda.html">Agenda</a>
+    <a href="dashboard_financiero.html">Finanzas</a>
+    <a href="aseguradoras.html" class="active">Aseguradoras</a>
+    <a href="documentos.html">Documentos</a>
+  </nav>
+  <a href="index.html" class="btn-back">← Sistema Principal</a>
+</header>
+
+<main>
+  <div class="page-header">
+    <div>
+      <div class="page-title">🏥 Módulo de Aseguradoras <span>Gestión de solicitudes y autorizations</span></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="abrirNuevaSolicitud()">📋 Nueva Solicitud</button>
+      <button class="btn-primary" onclick="abrirModalAseguradora()">+ Nueva Aseguradora</button>
+    </div>
+  </div>
+
+  <div class="two-col">
+
+    <!-- ─ SIDEBAR: Lista de aseguradoras ─ -->
+    <div>
+      <div class="sidebar-card">
+        <div class="sidebar-header">
+          🏢 Aseguradoras
+          <span style="background:rgba(255,255,255,.2); border-radius:20px; padding:2px 10px; font-size:.8rem;" id="countAseg">0</span>
+        </div>
+        <div class="sidebar-search">
+          <input type="text" placeholder="🔍 Buscar aseguradora..." id="buscarAseg" oninput="filtrarAseguradoras()">
+        </div>
+        <div class="aseg-list" id="listaAseguradoras"></div>
+      </div>
+    </div>
+
+    <!-- ─ PANEL DERECHO ─ -->
+    <div class="panel">
+
+      <!-- PANEL: Detalle aseguradora -->
+      <div class="card" id="panelDetalle" style="display:none;">
+        <div class="card-header">
+          <div class="card-title" id="panelNombre">🏥 Aseguradora</div>
+          <div class="btn-row">
+            <button class="btn-primary btn-sm" onclick="editarAseguradora()">✏️ Editar</button>
+            <button class="btn-primary btn-sm" onclick="abrirNuevaSolicitudPara()">📋 Nueva Solicitud</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="stats-row" id="statsAseg"></div>
+          <div class="tabs">
+            <button class="tab-btn active" onclick="cambiarTab('info', this)">📋 Información</button>
+            <button class="tab-btn" onclick="cambiarTab('solicitudes', this)">📄 Solicitudes</button>
+            <button class="tab-btn" onclick="cambiarTab('historial', this)">📊 Historial</button>
+            <button class="tab-btn" onclick="cambiarTab('cuenta', this)">💳 Cuenta Corriente</button>
+          </div>
+          <div id="tab-info" class="tab-pane active"></div>
+          <div id="tab-solicitudes" class="tab-pane"></div>
+          <div id="tab-historial" class="tab-pane"></div>
+          <div id="tab-cuenta" class="tab-pane"></div>
+        </div>
+      </div>
+
+      <!-- PANEL: Vacío inicial / Dashboard Global -->
+      <div class="card" id="panelEmpty">
+        <div class="card-header">
+          <div class="card-title">📊 Dashboard — Reclamaciones y Cobros</div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-primary btn-sm" onclick="renderDashboardGlobal()">🔄 Actualizar</button>
+          </div>
+        </div>
+        <div class="card-body" id="dashboard-global-body">
+          <!-- filled by renderDashboardGlobal() -->
+        </div>
+      </div>
+
+      <!-- PANEL: Gestión de Solicitudes con tabs -->
+      <div class="card" id="card-solicitudes">
+        <div class="card-header">
+          <div class="card-title">📋 Solicitudes a Aseguradoras / ARS</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <a href="index.html" onclick="localStorage.setItem('mc_goto','aseguradoras');return true;"
+               style="background:#f0fdf4;color:#065f46;border:1.5px solid #6ee7b7;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap;">
+              ↗ Módulo completo
+            </a>
+            <button class="btn-primary btn-sm" onclick="abrirNuevaSolicitud()" style="white-space:nowrap;">+ Nueva solicitud</button>
+          </div>
+        </div>
+
+        <!-- KPI strip -->
+        <div style="padding:12px 20px 0;" id="sol-kpi-strip"></div>
+
+        <!-- Filtros tipo pills -->
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 20px 10px;border-bottom:1px solid var(--border);">
+          <button id="sfpill-todas" style="padding:6px 14px;border-radius:20px;border:none;cursor:pointer;font-size:12px;font-weight:700;background:var(--navy);color:white;" onclick="_sfFiltro('todas',this)">Todas</button>
+          <button id="sfpill-proceso" style="padding:6px 14px;border-radius:20px;border:none;cursor:pointer;font-size:12px;font-weight:500;background:#f1f5f9;color:#64748b;" onclick="_sfFiltro('proceso',this)">⏳ En proceso</button>
+          <button id="sfpill-aprobadas" style="padding:6px 14px;border-radius:20px;border:none;cursor:pointer;font-size:12px;font-weight:500;background:#f1f5f9;color:#64748b;" onclick="_sfFiltro('aprobadas',this)">✔ Aprobadas</button>
+          <button id="sfpill-rechazadas" style="padding:6px 14px;border-radius:20px;border:none;cursor:pointer;font-size:12px;font-weight:500;background:#f1f5f9;color:#64748b;" onclick="_sfFiltro('rechazadas',this)">✘ Rechazadas</button>
+          <button id="sfpill-pendientes" style="padding:6px 14px;border-radius:20px;border:none;cursor:pointer;font-size:12px;font-weight:500;background:#f1f5f9;color:#64748b;" onclick="_sfFiltro('pendientes',this)">💰 Pendientes cobro</button>
+          <div style="flex:1;min-width:12px;"></div>
+          <input type="search" id="buscarSol" placeholder="🔍 Buscar paciente, ARS, N°..."
+            oninput="filtrarSolicitudes()" style="padding:6px 14px;border-radius:20px;border:1px solid var(--border);font-size:12px;width:220px;outline:none;">
+        </div>
+
+        <!-- Tabla -->
+        <div id="tablaSolicitudes" style="overflow-x:auto;"></div>
+
+        <!-- Sub-tabs: Pendientes / Por Paciente / Por ARS -->
+        <div id="gtab-pendientes" class="gtab" style="display:none;"><div id="tablaPendientes"></div></div>
+        <div id="gtab-por-paciente" class="gtab" style="display:none;"><div id="tablaPorPaciente"></div></div>
+        <div id="gtab-por-ars" class="gtab" style="display:none;"><div id="tablaPorArs"></div></div>
+      </div>
+
+      <!-- PANEL: Honorarios por Procedimiento -->
+      <div class="card" id="card-honorarios">
+        <div class="card-header">
+          <div class="card-title">💲 Honorarios por Procedimiento / ARS</div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-primary btn-sm" onclick="_honAbrirModal()">+ Agregar</button>
+            <button class="btn-secondary btn-sm" onclick="_honImprimir()">🖨 Imprimir tarifa</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;padding:10px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap;">
+          <select class="form-control" id="hon-filtro-ars" style="max-width:200px;" onchange="_honRender()">
+            <option value="">Todas las aseguradoras</option>
+          </select>
+          <select class="form-control" id="hon-filtro-proc" style="max-width:200px;" onchange="_honRender()">
+            <option value="">Todos los procedimientos</option>
+          </select>
+          <div style="flex:1;"></div>
+          <span style="font-size:.78rem;color:var(--text-light);">Tarifa de honorarios médicos por ARS</span>
+        </div>
+        <div id="tabla-honorarios" style="overflow-x:auto;"></div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<!-- ═══ MODAL: HONORARIO ═══ -->
+<div class="modal-overlay" id="modalHonorario">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <span class="modal-title" id="tituloModalHon">💲 Nuevo Honorario</span>
+      <button class="modal-close" onclick="cerrarModal('modalHonorario')">×</button>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:12px;">
+      <input type="hidden" id="honEditId">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Aseguradora *</label>
+          <select class="form-control" id="honArs" required></select>
+        </div>
+        <div class="form-group">
+          <label>Procedimiento *</label>
+          <input class="form-control" id="honProc" list="hon-proc-list" placeholder="Ej: Herniorrafia inguinal" required>
+          <datalist id="hon-proc-list">
+            <option>Herniorrafia Inguinal Unilateral</option>
+            <option>Herniorrafia Inguinal Bilateral</option>
+            <option>Herniorrafia Umbilical</option>
+            <option>Apendicectomía Laparoscópica</option>
+            <option>Hidrocelectomía</option>
+            <option>Circuncisión</option>
+            <option>Orquidopexia</option>
+            <option>Colecistectomía Laparoscópica</option>
+            <option>Consulta Inicial Cirugía Pediátrica</option>
+            <option>Consulta de Control</option>
+            <option>Frenuloplastía</option>
+            <option>Piloromiotomía</option>
+          </datalist>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Código CPT</label>
+          <input class="form-control" id="honCpt" placeholder="Ej: 49500">
+        </div>
+        <div class="form-group">
+          <label>Código CIE-10</label>
+          <input class="form-control" id="honCie" placeholder="Ej: K40.9">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Honorario Solicitado (RD$) *</label>
+          <input type="number" class="form-control" id="honMonto" min="0" placeholder="0.00" required>
+        </div>
+        <div class="form-group">
+          <label>Cobertura ARS (%)</label>
+          <input type="number" class="form-control" id="honCob" min="0" max="100" placeholder="80">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Monto Aprobado Histórico (RD$)</label>
+          <input type="number" class="form-control" id="honAprobado" min="0" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label>Tiempo de Respuesta (días)</label>
+          <input type="number" class="form-control" id="honDias" min="0" placeholder="15">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notas / Condiciones</label>
+        <textarea class="form-control" id="honNotas" rows="2" placeholder="Ej: Requiere pre-autorización. Adjuntar epicrisis..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="cerrarModal('modalHonorario')">Cancelar</button>
+      <button class="btn-primary" onclick="_honGuardar()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: ASEGURADORA ═══ -->
+<div class="modal-overlay" id="modalAseguradora">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="tituloModalAseg">🏥 Nueva Aseguradora</span>
+      <button class="modal-close" onclick="cerrarModal('modalAseguradora')">×</button>
+    </div>
+    <form onsubmit="guardarAseguradora(event)">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nombre de la Aseguradora *</label>
+          <input class="form-control" id="asegNombre" required placeholder="Ej: MAPFRE Salud">
+        </div>
+        <div class="form-group">
+          <label>Sigla / Código</label>
+          <input class="form-control" id="asegSigla" placeholder="Ej: MAPFRE">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Teléfono Principal</label>
+          <input class="form-control" id="asegTel" type="tel" placeholder="809-000-0000">
+        </div>
+        <div class="form-group">
+          <label>Teléfono Autorizaciones</label>
+          <input class="form-control" id="asegTelAut" type="tel" placeholder="809-000-0001">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Email Autorizaciones</label>
+          <input class="form-control" id="asegEmail" type="email" placeholder="autorizaciones@aseg.com">
+        </div>
+        <div class="form-group">
+          <label>Portal Web</label>
+          <input class="form-control" id="asegWeb" type="url" placeholder="https://portal.aseg.com">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Ejecutivo de Cuenta</label>
+          <input class="form-control" id="asegEjecutivo" placeholder="Nombre del ejecutivo">
+        </div>
+        <div class="form-group">
+          <label>Teléfono Ejecutivo</label>
+          <input class="form-control" id="asegTelEj" type="tel">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Código Proveedor</label>
+          <input class="form-control" id="asegCodProv" placeholder="Ej: MED-00123">
+        </div>
+        <div class="form-group">
+          <label>Tipo de Red</label>
+          <select class="form-control" id="asegRed">
+            <option value="preferida">Red Preferida</option>
+            <option value="basica">Red Básica</option>
+            <option value="cerrada">Red Cerrada</option>
+            <option value="abierta">Red Abierta</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Procedimientos Cubiertos (uno por línea)</label>
+        <textarea class="form-control" id="asegProcedimientos" rows="3" placeholder="Herniorrafia Inguinal&#10;Apendicectomía&#10;Circuncisión"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Deducible Promedio (RD$)</label>
+          <input class="form-control" id="asegDeducible" type="number" min="0" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label>Cobertura Promedio (%)</label>
+          <input class="form-control" id="asegCobertura" type="number" min="0" max="100" placeholder="80">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notas / Observaciones</label>
+        <textarea class="form-control" id="asegNotas" rows="2" placeholder="Requisitos especiales, notas de facturación..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="cerrarModal('modalAseguradora')">Cancelar</button>
+        <button type="submit" class="btn-primary">💾 Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══ MODAL: NUEVA SOLICITUD ═══ -->
+<div class="modal-overlay" id="modalSolicitud">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">📋 Nueva Solicitud a Aseguradora</span>
+      <button class="modal-close" onclick="cerrarModal('modalSolicitud')">×</button>
+    </div>
+
+    <!-- Progress tracker -->
+    <div class="progress-track" id="progressTracker">
+      <div class="progress-step active" id="step1">
+        <div class="step-circle">1</div><div class="step-label">Tipo</div>
+      </div>
+      <div class="progress-step" id="step2">
+        <div class="step-circle">2</div><div class="step-label">Paciente</div>
+      </div>
+      <div class="progress-step" id="step3">
+        <div class="step-circle">3</div><div class="step-label">Detalles</div>
+      </div>
+      <div class="progress-step" id="step4">
+        <div class="step-circle">4</div><div class="step-label">Revisar</div>
+      </div>
+    </div>
+
+    <!-- STEP 1: Tipo -->
+    <div id="solStep1">
+      <p style="font-size:.9rem; color:var(--text-light); margin-bottom:16px;">Selecciona el tipo de solicitud:</p>
+      <div class="template-grid" id="tiposGrid">
+        <div class="template-card" onclick="selTipo('autorizacion_cirugia', this)">
+          <div class="icon">🔪</div>
+          <div class="name">Autorización Quirúrgica</div>
+          <div class="desc">Para procedimientos quirúrgicos</div>
+        </div>
+        <div class="template-card" onclick="selTipo('autorizacion_consulta', this)">
+          <div class="icon">👨‍⚕️</div>
+          <div class="name">Autorización Consulta</div>
+          <div class="desc">Consulta médica especializada</div>
+        </div>
+        <div class="template-card" onclick="selTipo('referimiento', this)">
+          <div class="icon">📤</div>
+          <div class="name">Referimiento</div>
+          <div class="desc">Referir a otro especialista</div>
+        </div>
+        <div class="template-card" onclick="selTipo('reclamacion', this)">
+          <div class="icon">💰</div>
+          <div class="name">Reclamación</div>
+          <div class="desc">Cobro de servicios prestados</div>
+        </div>
+        <div class="template-card" onclick="selTipo('apelacion', this)">
+          <div class="icon">⚖️</div>
+          <div class="name">Apelación</div>
+          <div class="desc">Apelar solicitud rechazada</div>
+        </div>
+        <div class="template-card" onclick="selTipo('certificado', this)">
+          <div class="icon">📃</div>
+          <div class="name">Certificado Médico</div>
+          <div class="desc">Para fines de aseguradora</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="cerrarModal('modalSolicitud')">Cancelar</button>
+        <button class="btn-primary" onclick="irStep(2)" id="btnSiguiente1" disabled>Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Datos paciente -->
+    <div id="solStep2" style="display:none;">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Paciente *</label>
+          <select class="form-control" id="solPaciente" required onchange="cargarDatosPaciente()">
+            <option value="">Seleccionar paciente...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Aseguradora *</label>
+          <select class="form-control" id="solAseguradora" required>
+            <option value="">Seleccionar...</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row" id="infoPaciente" style="display:none;">
+        <div class="form-group">
+          <label>No. Póliza</label>
+          <input class="form-control" id="solPoliza" placeholder="Número de póliza">
+        </div>
+        <div class="form-group">
+          <label>Titular de la Póliza</label>
+          <input class="form-control" id="solTitular" placeholder="Nombre del titular">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Fecha de Servicio *</label>
+          <input type="date" class="form-control" id="solFechaServ">
+        </div>
+        <div class="form-group">
+          <label>No. Autorización Previa</label>
+          <input class="form-control" id="solNumAut" placeholder="Si ya tiene autorización">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="irStep(1)">← Anterior</button>
+        <button class="btn-primary" onclick="irStep(3)">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Detalles clínicos -->
+    <div id="solStep3" style="display:none;">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Diagnóstico Principal (CIE-10) *</label>
+          <input class="form-control" id="solDiag" placeholder="K40.9 - Hernia inguinal">
+        </div>
+        <div class="form-group">
+          <label>Diagnóstico Secundario</label>
+          <input class="form-control" id="solDiag2" placeholder="Diagnóstico secundario">
+        </div>
+      </div>
+      <div class="form-group" id="grpProcedimiento">
+        <label>Procedimiento / Servicio *</label>
+        <input class="form-control" id="solProcedimiento" placeholder="Nombre del procedimiento o servicio">
+      </div>
+      <div class="form-row" id="grpQx">
+        <div class="form-group">
+          <label>Código CPT / Procedimiento</label>
+          <input class="form-control" id="solCpt" placeholder="Ej: 49500">
+        </div>
+        <div class="form-group">
+          <label>Hospital / Centro</label>
+          <input class="form-control" id="solHospital" placeholder="Nombre del hospital">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Monto Solicitado (RD$)</label>
+          <input type="number" class="form-control" id="solMonto" min="0" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label>Prioridad</label>
+          <select class="form-control" id="solPrioridad">
+            <option value="normal">Normal</option>
+            <option value="urgente">Urgente</option>
+            <option value="emergencia">Emergencia</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Justificación Médica *</label>
+        <textarea class="form-control" id="solJustificacion" rows="4" placeholder="Descripción clínica detallada que justifica el procedimiento solicitado. Incluir evolución del paciente, tratamientos previos y necesidad médica..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Documentos Adjuntos</label>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:.85rem; font-weight:400;">
+            <input type="checkbox" id="adjLab"> Resultados de laboratorio
+          </label>
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:.85rem; font-weight:400;">
+            <input type="checkbox" id="adjImg"> Imágenes (Rx/Eco/TAC)
+          </label>
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:.85rem; font-weight:400;">
+            <input type="checkbox" id="adjEvo"> Notas de evolución
+          </label>
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:.85rem; font-weight:400;">
+            <input type="checkbox" id="adjRef"> Referimiento médico
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="irStep(2)">← Anterior</button>
+        <button class="btn-primary" onclick="irStep(4)">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: Revisar -->
+    <div id="solStep4" style="display:none;">
+      <div id="resumenSolicitud" style="background:var(--bg); border-radius:12px; padding:16px; margin-bottom:16px; font-size:.9rem; line-height:1.8;"></div>
+      <div class="form-group">
+        <label>Notas Adicionales para la Aseguradora</label>
+        <textarea class="form-control" id="solNotas" rows="2" placeholder="Notas adicionales..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="irStep(3)">← Anterior</button>
+        <button class="btn-primary" onclick="guardarSolicitud()">✅ Crear Solicitud</button>
+        <button class="btn-primary" style="background:var(--navy);" onclick="guardarYGenerarPDF()">📄 Crear + Generar Carta</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+//  STORAGE
+// ════════════════════════════════════════
+const LS = {
+  get: (k, d=[]) => { try { return JSON.parse(localStorage.getItem(k)) || d; } catch { return d; } },
+  set: (k, v) => localStorage.setItem(k, JSON.stringify(v))
+};
+
+// Seed aseguradoras
+function initData() {
+  // Re-seed si PALIC sigue en el sistema (reemplazado por MAPFRE SALUD)
+  const existing = LS.get('mc_aseguradoras');
+  if (existing.length >= 23 && !existing.find(a => a.nombre === 'PALIC')) return;
+  if (existing.find(a => a.nombre === 'PALIC')) {
+    // Actualizar PALIC → MAPFRE SALUD en el localStorage sin borrar los demás datos
+    const updated = existing.map(a => a.nombre === 'PALIC'
+      ? {...a, nombre:'MAPFRE SALUD', sigla:'MAPFRE', tel:'809-472-7100', email:'autorizaciones@mapfresalud.com.do', web:'https://mapfresalud.com.do', notas:'Anteriormente PALIC. Código proveedor: 8261835'}
+      : a);
+    LS.set('mc_aseguradoras', updated);
+    return;
+  }
+  const aseg = [
+    { id:'ASG-001', nombre:'APS',              sigla:'APS',        tel:'809-000-0000', telAut:'', email:'', web:'', ejecutivo:'', telEj:'', codProv:'65157',      pin:'',    red:'abierta',   deducible:0,    cobertura:80, procedimientos:'Consultas\nCirugías pediátricas', notas:'Código proveedor: 65157', creado: fecha() },
+    { id:'ASG-002', nombre:'ASEMAP',           sigla:'ASEMAP',     tel:'809-000-0000', telAut:'', email:'', web:'', ejecutivo:'', telEj:'', codProv:'4457',       pin:'',    red:'abierta',   deducible:0,    cobertura:80, procedimientos:'Consultas\nCirugías pediátricas', notas:'Código proveedor: 4457', creado: fecha() },
+    { id:'ASG-003', nombre:'Banco Central',    sigla:'BCRD',       tel:'809-000-0000', telAut:'', email:'', web:'', ejecutivo:'', telEj:'', codProv:'2571',       pin:'5731',red:'cerrada',   deducible:0,    cobertura:90, procedimientos:'Consultas\nCirugías\nHospitalización', notas:'Código: 2571 | PIN: 5731', creado: fecha() },
+    { id:'ASG-004', nombre:'Banco de Reservas',sigla:'BANRESERVAS',tel:'809-000-0000', telAut:'', email:'', web:'', ejecutivo:'', telEj:'', codProv:'10006213',   pin:'',    red:'cerrada',   deducible:0,    cobertura:90, procedimientos:'Consultas\nCirugías\nHospitalización', notas:'Código proveedor: 10006213', creado: fecha() },
+    { id:'ASG-005', nombre:'BMI Salud',        sigla:'BMI',        tel:'809-472-3333', telAut:'', email:'auth@bmisalud.com', web:'https://bmisalud.com', ejecutivo:'', telEj:'', codProv:'601080045',  pin:'',    red:'abierta',   deducible:2500, cobertura:75, procedimientos:'Todas las cirugías pediátricas\nHospitalización', notas:'Seguro internacional - cobertura RD y exterior. Código: 601080045', creado: fecha() },
+    { id:'ASG-006', nombre:'Constitución',     sigla:'CONST',      tel:'809-000-0000', telAut:'', email:'', web:'', ejecutivo:'', telEj:'', codProv:'6379',       pin:'',    red:'abierta',   deducible:0,    cobertura:80, procedimientos:'Consultas\nCirugías pediátricas', notas:'Código proveedor: 6379', creado: fecha() },
+    { id:'ASG-007', nombre:'CMD',              sigla:'CMD',        tel:'809-000-0000', telAut:'', email:'', web:'', ejecutivo:'', telEj:'', codProv:'9001-0915',  pin:'',    red:'abierta',   deducible:0,    cobertura:80, procedimientos:'Consultas\nCirugías pediátricas', notas:'Código proveedor: 9001-0915', creado: fecha() },
+    { id:'ASG-008', nombre:'Futuro',           sigla:'FUTURO',     tel:'809-000-0000', telAut:'', email:'', web:'', ejecutivo:'', telEj:'', codProv:'13067',      pin:'',    red:'abierta',   deducible:0,    cobertura:80, procedimientos:'Consultas\nCirugías pediátricas', notas:'Código proveedor: 13067', creado: fecha() },
+    { id:'ASG-009', nombre:'FF.AA.',           sigla:'FFAA',       tel:'809-000-0000', telAut:'', email:'', web:'', ejecutivo:'', telEj:'', codProv:'163548',     pin:'',    red:'cerrada',   deducible:0,    cobertura:100,procedimientos:'Consultas\nCirugías\nHospitalización', notas:'Fuerzas Armadas. Código: 163548', creado: fecha() },
+    { id:'ASG-010', nombre:'GMA',              sigla:'GMA',        tel:'809-000-0000', telAut:'', email:'', web:'', ejecutivo:'', telEj:'', codProv:'10339',      pin:'',    red:'abierta',   deducible:0,    cobertura:80, procedimientos:'Consultas\nCirugías pediátricas', notas:'Código proveedor: 10339', creado: fecha() },
+    { id:'ASG-011', nombre:'ARS Humano',       sigla:'HUMANO',     tel:'809-567-8900', telAut:'', email:'autorizaciones@humano.com.do', web:'https://humano.com.do', ejecutivo:'', telEj:'', codProv:'10889',      pin:'',    red:'preferida', deducible:2000, cobertura:85, procedimientos:'Herniorrafia Umbilical\nHerniorrafia Inguinal\nApendicectomía', notas:'Código proveedor: 10889', creado: fecha() },
+    { id:'ASG-012', nombre:'Meta Salud',       sigla:'META',       tel:'809-368-5555', telAut:'', email:'auth@metasalud.com.do', web:'', ejecutivo:'', telEj:'', codProv:'6119',       pin:'',    red:'preferida', deducible:1500, cobertura:80, procedimientos:'Herniorrafias\nCirugías laparoscópicas\nCircuncisión', notas:'Código proveedor: 6119', creado: fecha() },
+    { id:'ASG-013', nombre:'Monumental',       sigla:'MONUMENTAL', tel:'809-000-0000', telAut:'', email:'', web:'', ejecutivo:'', telEj:'', codProv:'7045',       pin:'',    red:'abierta',   deducible:0,    cobertura:80, procedimientos:'Consultas\nCirugías pediátricas', notas:'Código proveedor: 7045', creado: fecha() },
+    { id:'ASG-014', nombre:'MAPFRE SALUD',      sigla:'MAPFRE',     tel:'809-472-7100', telAut:'', email:'autorizaciones@mapfresalud.com.do', web:'https://mapfresalud.com.do', ejecutivo:'', telEj:'', codProv:'8261835',    pin:'',    red:'abierta',   deducible:0,    cobertura:80, procedimientos:'Consultas\nCirugías pediátricas', notas:'Anteriormente PALIC. Código proveedor: 8261835', creado: fecha() },
+    { id:'ASG-015', nombre:'Renacer',          sigla:'RENACER',    tel:'809-000-0000', telAut:'', email:'', web:'', ejecutivo:'', telEj:'', codProv:'6432',       pin:'',    red:'abierta',   deducible:0,    cobertura:80, procedimientos:'Consultas\nCirugías pediátricas', notas:'Código proveedor: 6432', creado: fecha() },
+    { id:'ASG-016', nombre:'Salud Segura',     sigla:'SALUDSEG',   tel:'809-000-0000', telAut:'', email:'', web:'', ejecutivo:'', telEj:'', codProv:'11083',      pin:'',    red:'abierta',   deducible:0,    cobertura:80, procedimientos:'Consultas\nCirugías pediátricas', notas:'Código proveedor: 11083', creado: fecha() },
+    { id:'ASG-017', nombre:'SEMUNACED',        sigla:'SEMUNACED',  tel:'809-000-0000', telAut:'', email:'', web:'', ejecutivo:'', telEj:'', codProv:'228651',     pin:'',    red:'cerrada',   deducible:0,    cobertura:90, procedimientos:'Consultas\nCirugías\nHospitalización', notas:'Código proveedor: 228651', creado: fecha() },
+    { id:'ASG-018', nombre:'SENASA',           sigla:'SENASA',     tel:'809-686-9646', telAut:'', email:'autorizaciones@senasa.gob.do', web:'https://senasa.gob.do', ejecutivo:'', telEj:'', codProv:'817151',     pin:'4457',red:'cerrada',   deducible:0,    cobertura:100,procedimientos:'Cirugías en hospitales de la red\nConsultas generales', notas:'Código: 817151 | PIN: 4457. Solo red Senasa.', creado: fecha() },
+    { id:'ASG-019', nombre:'SEMMA',            sigla:'SEMMA',      tel:'809-000-0000', telAut:'', email:'', web:'', ejecutivo:'', telEj:'', codProv:'11235',      pin:'',    red:'cerrada',   deducible:0,    cobertura:90, procedimientos:'Consultas\nCirugías\nHospitalización', notas:'Código proveedor: 11235', creado: fecha() },
+    { id:'ASG-020', nombre:'SIMAG',            sigla:'SIMAG',      tel:'809-000-0000', telAut:'', email:'', web:'', ejecutivo:'', telEj:'', codProv:'672812',     pin:'',    red:'cerrada',   deducible:0,    cobertura:90, procedimientos:'Consultas\nCirugías\nHospitalización', notas:'Código proveedor: 672812', creado: fecha() },
+    { id:'ASG-021', nombre:'UASD',             sigla:'UASD',       tel:'809-000-0000', telAut:'', email:'', web:'', ejecutivo:'', telEj:'', codProv:'2563',       pin:'',    red:'cerrada',   deducible:0,    cobertura:90, procedimientos:'Consultas\nCirugías pediátricas', notas:'Código proveedor: 2563', creado: fecha() },
+    { id:'ASG-022', nombre:'Universal',        sigla:'UNIVERSAL',  tel:'809-000-0000', telAut:'', email:'', web:'', ejecutivo:'', telEj:'', codProv:'06052',      pin:'',    red:'preferida', deducible:2000, cobertura:85, procedimientos:'Consultas\nCirugías pediátricas\nHospitalización', notas:'Código proveedor: 06052', creado: fecha() },
+    { id:'ASG-023', nombre:'ARS Yunén',        sigla:'YUNEN',      tel:'809-682-8888', telAut:'', email:'aut@yunen.com.do', web:'https://yunen.com.do', ejecutivo:'', telEj:'', codProv:'12067',      pin:'',    red:'abierta',   deducible:5000, cobertura:70, procedimientos:'Cirugías electivas\nConsultas', notas:'Código proveedor: 12067', creado: fecha() },
+  ];
+  LS.set('mc_aseguradoras', aseg);
+
+  // Seed solicitudes
+  const soles = [
+    { id:'SOL-2026-0001', tipo:'autorizacion_cirugia', aseguradora:'ARS Humano', aseguradoraId:'ASG-011', paciente:'García Pérez, Ana', poliza:'HUM-12345', diagnostico:'K40.9 - Hernia Inguinal Unilateral', procedimiento:'Herniorrafia Inguinal Derecha', monto:45000, estado:'aprobado', prioridad:'normal', fechaCreacion: '2026-05-01', fechaServicio:'2026-05-10', numAut:'AUTH-2026-8821', justificacion:'Paciente con hernia inguinal derecha sintomática.', notas:'', documentos:[] },
+    { id:'SOL-2026-0002', tipo:'reclamacion', aseguradora:'Universal', aseguradoraId:'ASG-022', paciente:'López Méndez, Carlos', poliza:'UNI-66789', diagnostico:'K37 - Apendicitis', procedimiento:'Apendicectomía Laparoscópica', monto:65000, estado:'en-proceso', prioridad:'urgente', fechaCreacion:'2026-05-05', fechaServicio:'2026-05-03', numAut:'', justificacion:'Apendicitis aguda.', notas:'Urgencia quirúrgica', documentos:[] },
+    { id:'SOL-2026-0003', tipo:'autorizacion_consulta', aseguradora:'SENASA', aseguradoraId:'ASG-018', paciente:'Rodríguez, María', poliza:'SEN-11234', diagnostico:'N47 - Fimosis', procedimiento:'Consulta de Cirugía Pediátrica', monto:2500, estado:'pendiente', prioridad:'normal', fechaCreacion:'2026-05-10', fechaServicio:'2026-05-20', numAut:'', justificacion:'Valoración inicial para posible corrección quirúrgica.', notas:'', documentos:[] },
+    { id:'SOL-2026-0004', tipo:'autorizacion_cirugia', aseguradora:'BMI Salud', aseguradoraId:'ASG-005', paciente:'Martínez Ruiz, Juan', poliza:'BMI-00456', diagnostico:'N43 - Hidrocele', procedimiento:'Hidrocelectomía', monto:38000, estado:'rechazado', prioridad:'normal', fechaCreacion:'2026-04-20', fechaServicio:'2026-04-28', numAut:'', justificacion:'Hidrocele bilateral con molestias.', notas:'Rechazo por falta de documentación', documentos:[] },
+    { id:'SOL-2026-0005', tipo:'autorizacion_cirugia', aseguradora:'ARS Yunén', aseguradoraId:'ASG-023', paciente:'González López, Laura', poliza:'YUN-99123', diagnostico:'K42 - Hernia Umbilical', procedimiento:'Herniorrafia Umbilical', monto:35000, estado:'enviado', prioridad:'normal', fechaCreacion:'2026-05-15', fechaServicio:'2026-05-25', numAut:'', justificacion:'Hernia umbilical con encarcelamiento intermitente.', notas:'', documentos:[] },
+  ];
+  LS.set('mc_solicitudes', soles);
+}
+
+function fecha() { return new Date().toISOString().split('T')[0]; }
+
+// ════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════
+let asegSelId = null;
+let editingAsegId = null;
+let solStepActual = 1;
+let tipoSolicitud = null;
+let solParaAseg = null;
+
+// ════════════════════════════════════════
+//  RENDER LISTA
+// ════════════════════════════════════════
+function renderLista() {
+  const aseguradoras = LS.get('mc_aseguradoras');
+  const soles = LS.get('mc_solicitudes');
+  const buscar = document.getElementById('buscarAseg').value.toLowerCase();
+  const filtradas = aseguradoras.filter(a => !buscar || a.nombre.toLowerCase().includes(buscar) || a.sigla.toLowerCase().includes(buscar));
+
+  document.getElementById('countAseg').textContent = aseguradoras.length;
+  const lista = document.getElementById('listaAseguradoras');
+  if (!filtradas.length) {
+    lista.innerHTML = `<div class="empty" style="padding:20px;"><div class="icon">🔍</div><p>Sin resultados</p></div>`;
+    return;
+  }
+  lista.innerHTML = filtradas.map(a => {
+    const count = soles.filter(s => s.aseguradoraId === a.id).length;
+    const pend = soles.filter(s => s.aseguradoraId === a.id && ['pendiente','enviado','en-proceso'].includes(s.estado)).length;
+    return `
+      <div class="aseg-item${asegSelId===a.id?' active':''}" onclick="selAseguradora('${a.id}')">
+        <div class="aseg-avatar">${a.sigla.substring(0,3).toUpperCase()}</div>
+        <div class="aseg-info">
+          <div class="aseg-name">${a.nombre}</div>
+          <div class="aseg-sub">Red: ${a.red} · Cob: ${a.cobertura}%</div>
+        </div>
+        ${pend > 0 ? `<span class="aseg-badge">⏳${pend}</span>` : count > 0 ? `<span class="aseg-badge">${count}</span>` : ''}
+      </div>`;
+  }).join('');
+}
+
+function filtrarAseguradoras() { renderLista(); }
+
+// ════════════════════════════════════════
+//  SELECCIONAR ASEGURADORA
+// ════════════════════════════════════════
+function selAseguradora(id) {
+  asegSelId = id;
+  renderLista();
+  const aseg = LS.get('mc_aseguradoras').find(a => a.id === id);
+  if (!aseg) return;
+  document.getElementById('panelEmpty').style.display = 'none';
+  document.getElementById('panelDetalle').style.display = 'block';
+  document.getElementById('panelNombre').innerHTML = `🏥 ${aseg.nombre} <span style="font-size:.8rem; color:var(--text-light); font-weight:400;">${aseg.codProv}</span>`;
+
+  const soles = LS.get('mc_solicitudes').filter(s => s.aseguradoraId === id);
+  const aprobadas = soles.filter(s=>s.estado==='aprobado');
+  const montoTotal = soles.reduce((s,o)=>s+(o.monto||0),0);
+
+  document.getElementById('statsAseg').innerHTML = `
+    <div class="stat-mini"><div class="val">${soles.length}</div><div class="lbl">Solicitudes</div></div>
+    <div class="stat-mini"><div class="val">${aprobadas.length}</div><div class="lbl">Aprobadas</div></div>
+    <div class="stat-mini"><div class="val">${soles.filter(s=>['pendiente','enviado','en-proceso'].includes(s.estado)).length}</div><div class="lbl">Pendientes</div></div>
+    <div class="stat-mini"><div class="val" style="font-size:1rem;">$${fmt(montoTotal)}</div><div class="lbl">Monto Total</div></div>
+  `;
+
+  renderTabInfo(aseg);
+  renderTabSolicitudes(soles);
+  renderTabHistorial(soles);
+  renderTabCuenta(soles, aseg);
+}
+
+function renderTabInfo(aseg) {
+  document.getElementById('tab-info').innerHTML = `
+    <div class="form-row">
+      <div><div class="form-group"><label>Teléfono Principal</label><div class="form-control" style="background:var(--bg);">📞 ${aseg.tel||'—'}</div></div></div>
+      <div><div class="form-group"><label>Teléfono Autorizaciones</label><div class="form-control" style="background:var(--bg);">📞 ${aseg.telAut||'—'}</div></div></div>
+    </div>
+    <div class="form-row">
+      <div><div class="form-group"><label>Email</label><div class="form-control" style="background:var(--bg);">📧 ${aseg.email||'—'}</div></div></div>
+      <div><div class="form-group"><label>Portal Web</label><div class="form-control" style="background:var(--bg);">${aseg.web ? `<a href="${aseg.web}" target="_blank" style="color:var(--teal)">🌐 ${aseg.web}</a>` : '—'}</div></div></div>
+    </div>
+    <div class="form-row">
+      <div><div class="form-group"><label>Ejecutivo de Cuenta</label><div class="form-control" style="background:var(--bg);">👤 ${aseg.ejecutivo||'—'} <span style="color:var(--text-light)">${aseg.telEj||''}</span></div></div></div>
+      <div><div class="form-group"><label>Código Proveedor</label><div class="form-control" style="background:var(--bg); font-family:monospace; font-weight:700; color:var(--navy);">${aseg.codProv||'—'}${aseg.pin ? ` &nbsp;|&nbsp; <span style="color:var(--orange)">PIN: ${aseg.pin}</span>` : ''}</div></div></div>
+    </div>
+    <div class="form-row">
+      <div><div class="form-group"><label>Tipo de Red</label><div class="form-control" style="background:var(--bg);">${redLabel(aseg.red)}</div></div></div>
+      <div><div class="form-group"><label>Deducible / Cobertura</label><div class="form-control" style="background:var(--bg);">RD$ ${fmt(aseg.deducible||0)} · ${aseg.cobertura||0}%</div></div></div>
+    </div>
+    ${aseg.procedimientos ? `<div class="form-group"><label>Procedimientos Cubiertos</label><div class="form-control" style="background:var(--bg); white-space:pre-line; min-height:60px;">${aseg.procedimientos}</div></div>` : ''}
+    ${aseg.notas ? `<div class="form-group"><label>Notas</label><div class="form-control" style="background:var(--bg);">${aseg.notas}</div></div>` : ''}
+  `;
+}
+
+function redLabel(r) {
+  const map = {preferida:'⭐ Red Preferida', basica:'📋 Red Básica', cerrada:'🔒 Red Cerrada', abierta:'🌐 Red Abierta'};
+  return map[r] || r;
+}
+
+function renderTabSolicitudes(soles) {
+  const container = document.getElementById('tab-solicitudes');
+  if (!soles.length) { container.innerHTML = '<div class="empty"><div class="icon">📄</div><p>Sin solicitudes aún</p></div>'; return; }
+  container.innerHTML = `
+    <table>
+      <thead><tr><th>ID</th><th>Tipo</th><th>Paciente</th><th>Servicio</th><th>Monto</th><th>Estado</th><th>Acciones</th></tr></thead>
+      <tbody>
+        ${soles.sort((a,b)=>b.fechaCreacion.localeCompare(a.fechaCreacion)).map(s => `
+          <tr>
+            <td style="font-family:monospace;font-size:.8rem;">${s.id}</td>
+            <td>${tipoLabel(s.tipo)}</td>
+            <td>${s.paciente}</td>
+            <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.procedimiento||'—'}</td>
+            <td class="amount">$${fmt(s.monto||0)}</td>
+            <td><span class="badge-status badge-${s.estado}">${estadoLabel(s.estado)}</span></td>
+            <td style="white-space:nowrap;">
+              <button onclick="verSolicitud('${s.id}')" style="background:none;border:none;cursor:pointer;font-size:1rem;" title="Ver">👁️</button>
+              <button onclick="modalCambiarEstado('${s.id}')" style="background:none;border:none;cursor:pointer;font-size:1rem;" title="Cambiar estado">🔄</button>
+              <button onclick="generarCartaSolicitud('${s.id}')" style="background:none;border:none;cursor:pointer;font-size:1rem;" title="Generar carta">📄</button>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function renderTabHistorial(soles) {
+  const container = document.getElementById('tab-historial');
+  const byMes = {};
+  soles.forEach(s => {
+    if (!s.fechaCreacion) return;
+    const [y,m] = s.fechaCreacion.split('-');
+    const k = `${y}-${m}`;
+    if (!byMes[k]) byMes[k] = {aprobado:0,rechazado:0,pendiente:0,monto:0};
+    byMes[k][s.estado] = (byMes[k][s.estado]||0) + 1;
+    byMes[k].monto += s.monto||0;
+  });
+  const rows = Object.entries(byMes).sort((a,b)=>b[0].localeCompare(a[0]));
+  if (!rows.length) { container.innerHTML = '<div class="empty"><div class="icon">📊</div><p>Sin historial</p></div>'; return; }
+  container.innerHTML = `
+    <table>
+      <thead><tr><th>Período</th><th>Aprobadas</th><th>Rechazadas</th><th>Pendientes</th><th>Monto Total</th></tr></thead>
+      <tbody>
+        ${rows.map(([k,v]) => {
+          const [y,m] = k.split('-');
+          const mes = new Date(y,m-1,1).toLocaleString('es-DO',{month:'long',year:'numeric'});
+          return `<tr><td><strong>${mes}</strong></td><td style="color:var(--green);font-weight:700;">${v.aprobado||0}</td><td style="color:var(--red);font-weight:700;">${v.rechazado||0}</td><td style="color:var(--orange);font-weight:700;">${v.pendiente||0}</td><td class="amount credit">$${fmt(v.monto)}</td></tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+}
+
+// ════════════════════════════════════════
+//  TABLA TODAS LAS SOLICITUDES — Diseño institucional
+// ════════════════════════════════════════
+let _sfFiltroActivo = 'todas';
+
+function _sfFiltro(key, btn) {
+  _sfFiltroActivo = key;
+  document.querySelectorAll('[id^="sfpill-"]').forEach(b => {
+    b.style.background = '#f1f5f9'; b.style.color = '#64748b'; b.style.fontWeight = '500';
+  });
+  if (btn) { btn.style.background = 'var(--navy)'; btn.style.color = 'white'; btn.style.fontWeight = '700'; }
+  renderSolicitudes();
+}
+
+function renderSolicitudes() {
+  const buscar  = (document.getElementById('buscarSol')?.value || '').toLowerCase();
+  const all     = LS.get('mc_solicitudes').sort((a,b) => b.fechaCreacion.localeCompare(a.fechaCreacion));
+  const total   = all.length;
+  const enProc  = all.filter(s => ['pendiente','enviado','en-proceso'].includes(s.estado)).length;
+  const aprob   = all.filter(s => s.estado === 'aprobado' || s.estado === 'pagado').length;
+  const rechaz  = all.filter(s => s.estado === 'rechazado').length;
+
+  // Actualizar pills con conteos
+  const pillMap = { todas: total, proceso: enProc, aprobadas: aprob, rechazadas: rechaz, pendientes: all.filter(esPendienteCobro).length };
+  Object.entries(pillMap).forEach(([k, n]) => {
+    const el = document.getElementById('sfpill-' + k);
+    if (el) {
+      const labels = { todas:`Todas (${n})`, proceso:`⏳ En proceso (${n})`, aprobadas:`✔ Aprobadas (${n})`, rechazadas:`✘ Rechazadas (${n})`, pendientes:`💰 Cobros (${n})` };
+      el.textContent = labels[k] || el.textContent;
+    }
+  });
+
+  // KPI strip
+  const kpi = document.getElementById('sol-kpi-strip');
+  if (kpi) {
+    const montoTotal = all.reduce((a,s) => a+(s.monto||0), 0);
+    const montoPend  = all.filter(esPendienteCobro).reduce((a,s) => a+(s.monto||0), 0);
+    kpi.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;">
+        <div style="border-radius:10px;padding:12px 14px;background:#f8fafc;border:1.5px solid #e2e8f0;">
+          <div style="font-size:1.4rem;font-weight:800;color:var(--navy);">${total}</div>
+          <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;color:#64748b;margin-top:2px;">Total solicitudes</div>
+        </div>
+        <div style="border-radius:10px;padding:12px 14px;background:#fff7ed;border:1.5px solid #fed7aa;">
+          <div style="font-size:1.4rem;font-weight:800;color:#c05621;">${enProc}</div>
+          <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;color:#c05621;margin-top:2px;">En proceso</div>
+        </div>
+        <div style="border-radius:10px;padding:12px 14px;background:#f0fdf4;border:1.5px solid #86efac;">
+          <div style="font-size:1.4rem;font-weight:800;color:#15803d;">${aprob}</div>
+          <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;color:#15803d;margin-top:2px;">Aprobadas</div>
+        </div>
+        <div style="border-radius:10px;padding:12px 14px;background:#fef2f2;border:1.5px solid #fca5a5;">
+          <div style="font-size:1.4rem;font-weight:800;color:#b91c1c;">${rechaz}</div>
+          <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;color:#b91c1c;margin-top:2px;">Rechazadas</div>
+        </div>
+      </div>`;
+  }
+
+  // Filtrar según tab activo y búsqueda
+  let data = all.filter(s => {
+    const matchQ = !buscar || (s.paciente||'').toLowerCase().includes(buscar)
+      || (s.aseguradora||'').toLowerCase().includes(buscar)
+      || (s.id||'').toLowerCase().includes(buscar)
+      || (s.procedimiento||'').toLowerCase().includes(buscar);
+    const matchF = _sfFiltroActivo === 'todas'      ? true
+                 : _sfFiltroActivo === 'proceso'    ? ['pendiente','enviado','en-proceso'].includes(s.estado)
+                 : _sfFiltroActivo === 'aprobadas'  ? (s.estado === 'aprobado' || s.estado === 'pagado')
+                 : _sfFiltroActivo === 'rechazadas' ? s.estado === 'rechazado'
+                 : _sfFiltroActivo === 'pendientes' ? esPendienteCobro(s)
+                 : true;
+    return matchQ && matchF;
+  });
+
+  const container = document.getElementById('tablaSolicitudes');
+  if (!data.length) {
+    container.innerHTML = `<div class="empty" style="padding:48px 20px;text-align:center;">
+      <div style="font-size:2.5rem;margin-bottom:10px;">📋</div>
+      <div style="font-weight:600;color:#475569;">Sin solicitudes para este filtro</div>
+      <div style="font-size:.8rem;color:#94a3b8;margin-top:4px;">Prueba otro filtro o usa "+ Nueva solicitud"</div>
+    </div>`;
+    return;
+  }
+
+  const rows = data.map(s => {
+    const dias = aging(s.fechaCreacion);
+    const esUrgente = s.prioridad === 'urgente' || s.prioridad === 'emergencia';
+    const rowBg = esUrgente ? 'background:#fff7ed;' : dias > 30 && esPendienteCobro(s) ? 'background:#fff5f5;' : '';
+    return `<tr style="${rowBg}">
+      <td style="white-space:nowrap;">
+        <span style="font-family:monospace;font-size:11px;color:var(--teal);font-weight:700;">${s.id}</span>
+        ${esUrgente ? '<span style="background:#e07b30;color:white;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;margin-left:4px;">URGENTE</span>' : ''}
+      </td>
+      <td style="font-size:12px;color:#64748b;white-space:nowrap;">${formatF(s.fechaCreacion)}</td>
+      <td>
+        <strong style="color:var(--navy);">${s.paciente||'—'}</strong>
+        ${s.poliza ? `<div style="font-size:10px;color:#94a3b8;">Póliza: ${s.poliza}</div>` : ''}
+      </td>
+      <td>
+        <strong style="color:var(--navy);">${s.aseguradora||'—'}</strong>
+        ${s.numAut ? `<div style="font-size:10px;color:var(--teal);font-family:monospace;">Auth: ${s.numAut}</div>` : ''}
+      </td>
+      <td style="font-size:12px;color:#475569;">${tipoLabel(s.tipo)}</td>
+      <td style="max-width:170px;">
+        <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;">${s.procedimiento||'—'}</div>
+        ${s.diagnostico ? `<div style="font-size:10px;color:#94a3b8;font-family:monospace;">${s.diagnostico.split(' ')[0]}</div>` : ''}
+      </td>
+      <td class="amount" style="color:var(--teal);">RD$ ${fmt(s.monto||0)}</td>
+      <td>
+        <div style="position:relative;display:inline-block;">
+          <span class="badge-status badge-${s.estado}" style="cursor:pointer;">${estadoLabel(s.estado)}</span>
+          <select onchange="cambiarEstadoRapido('${s.id}',this.value);this.value=''"
+            style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;">
+            <option value="">— cambiar estado —</option>
+            <option value="pendiente">⏳ Pendiente</option>
+            <option value="enviado">📤 Enviado</option>
+            <option value="en-proceso">🔄 En Proceso</option>
+            <option value="aprobado">✅ Aprobado</option>
+            <option value="rechazado">❌ Rechazado</option>
+            <option value="pagado">💚 Pagado</option>
+          </select>
+        </div>
+        ${dias > 0 && esPendienteCobro(s) ? `<div style="margin-top:3px;">${agingBadge(dias)}</div>` : ''}
+      </td>
+      <td style="white-space:nowrap;text-align:center;">
+        <button onclick="generarCartaSolicitud('${s.id}')" title="Imprimir solicitud"
+          style="background:var(--teal);color:white;border:none;border-radius:5px;padding:4px 9px;cursor:pointer;font-size:11px;font-weight:700;margin-right:2px;">📄 Imprimir</button>
+        <button onclick="verSolicitud('${s.id}')" title="Ver detalle"
+          style="background:none;border:1px solid var(--border);border-radius:5px;padding:4px 7px;cursor:pointer;font-size:12px;margin-right:2px;">👁</button>
+        ${esPendienteCobro(s) ? `<button onclick="marcarPagado('${s.id}')" title="Marcar como pagado"
+          style="background:#dcfce7;color:#15803d;border:none;border-radius:5px;padding:4px 7px;cursor:pointer;font-size:11px;font-weight:700;margin-right:2px;">💚</button>` : ''}
+        <button onclick="eliminarSolicitud('${s.id}')" title="Eliminar"
+          style="background:#fee2e2;color:#b91c1c;border:none;border-radius:5px;padding:4px 7px;cursor:pointer;font-size:12px;">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  container.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;">
+      <thead style="background:var(--navy);color:white;">
+        <tr>
+          <th style="padding:10px 12px;text-align:left;font-size:.75rem;font-weight:700;letter-spacing:.5px;">N°</th>
+          <th style="padding:10px 12px;text-align:left;font-size:.75rem;font-weight:700;letter-spacing:.5px;">Fecha</th>
+          <th style="padding:10px 12px;text-align:left;font-size:.75rem;font-weight:700;letter-spacing:.5px;">Paciente</th>
+          <th style="padding:10px 12px;text-align:left;font-size:.75rem;font-weight:700;letter-spacing:.5px;">Aseguradora</th>
+          <th style="padding:10px 12px;text-align:left;font-size:.75rem;font-weight:700;letter-spacing:.5px;">Tipo</th>
+          <th style="padding:10px 12px;text-align:left;font-size:.75rem;font-weight:700;letter-spacing:.5px;">Procedimiento</th>
+          <th style="padding:10px 12px;text-align:left;font-size:.75rem;font-weight:700;letter-spacing:.5px;">Monto</th>
+          <th style="padding:10px 12px;text-align:left;font-size:.75rem;font-weight:700;letter-spacing:.5px;">Estado</th>
+          <th style="padding:10px 12px;text-align:center;font-size:.75rem;font-weight:700;letter-spacing:.5px;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody style="font-size:.85rem;">
+        ${rows}
+      </tbody>
+    </table>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;font-size:.8rem;color:var(--text-light);border-top:1px solid var(--border);background:var(--light);">
+      <span>Mostrando ${data.length} de ${total} solicitud${total===1?'':'es'}</span>
+      <button onclick="eliminarTodasSolicitudes()" style="background:none;border:none;color:#cbd5e1;font-size:11px;cursor:pointer;padding:3px 8px;border-radius:4px;"
+        onmouseover="this.style.color='#ef4444';this.style.background='#fee2e2'"
+        onmouseout="this.style.color='#cbd5e1';this.style.background='none'">🗑 Limpiar todo</button>
+    </div>`;
+}
+
+function filtrarSolicitudes() { renderSolicitudes(); }
+
+function eliminarSolicitud(id) {
+  if (!confirm('¿Eliminar esta solicitud?')) return;
+  const soles = LS.get('mc_solicitudes').filter(s => s.id !== id);
+  LS.set('mc_solicitudes', soles);
+  renderAll();
+  if (asegSelId) selAseguradora(asegSelId);
+}
+
+function eliminarTodasSolicitudes() {
+  if (!confirm('¿Eliminar TODAS las solicitudes? Esta acción no se puede deshacer.')) return;
+  LS.set('mc_solicitudes', []);
+  renderAll();
+}
+
+function tipoLabel(t) {
+  const map = { autorizacion_cirugia:'🔪 Aut. Cirugía', autorizacion_consulta:'👨‍⚕️ Aut. Consulta',
+    referimiento:'📤 Referimiento', reclamacion:'💰 Reclamación', apelacion:'⚖️ Apelación', certificado:'📃 Certificado' };
+  return map[t] || t;
+}
+function estadoLabel(e) {
+  const map = { pendiente:'⏳ Pendiente', enviado:'📤 Enviado', 'en-proceso':'🔄 En Proceso', aprobado:'✅ Aprobado', rechazado:'❌ Rechazado', pagado:'💚 Pagado' };
+  return map[e] || e;
+}
+function fmt(n) { return Number(n).toLocaleString('es-DO',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function formatF(f) { if(!f) return '—'; const[y,m,d]=f.split('-'); return `${d}/${m}/${y}`; }
+
+// ════════════════════════════════════════
+//  MODAL ASEGURADORA
+// ════════════════════════════════════════
+function abrirModalAseguradora() {
+  editingAsegId = null;
+  document.getElementById('tituloModalAseg').textContent = '🏥 Nueva Aseguradora';
+  document.querySelectorAll('#modalAseguradora input, #modalAseguradora textarea, #modalAseguradora select').forEach(el => { el.value = ''; });
+  document.getElementById('modalAseguradora').classList.add('open');
+}
+
+function editarAseguradora() {
+  const aseg = LS.get('mc_aseguradoras').find(a => a.id === asegSelId);
+  if (!aseg) return;
+  editingAsegId = aseg.id;
+  document.getElementById('tituloModalAseg').textContent = '✏️ Editar Aseguradora';
+  document.getElementById('asegNombre').value = aseg.nombre||'';
+  document.getElementById('asegSigla').value = aseg.sigla||'';
+  document.getElementById('asegTel').value = aseg.tel||'';
+  document.getElementById('asegTelAut').value = aseg.telAut||'';
+  document.getElementById('asegEmail').value = aseg.email||'';
+  document.getElementById('asegWeb').value = aseg.web||'';
+  document.getElementById('asegEjecutivo').value = aseg.ejecutivo||'';
+  document.getElementById('asegTelEj').value = aseg.telEj||'';
+  document.getElementById('asegCodProv').value = aseg.codProv||'';
+  document.getElementById('asegRed').value = aseg.red||'preferida';
+  document.getElementById('asegDeducible').value = aseg.deducible||'';
+  document.getElementById('asegCobertura').value = aseg.cobertura||'';
+  document.getElementById('asegProcedimientos').value = aseg.procedimientos||'';
+  document.getElementById('asegNotas').value = aseg.notas||'';
+  document.getElementById('modalAseguradora').classList.add('open');
+}
+
+function guardarAseguradora(e) {
+  e.preventDefault();
+  const aseguradoras = LS.get('mc_aseguradoras');
+  const datos = {
+    nombre: document.getElementById('asegNombre').value,
+    sigla: document.getElementById('asegSigla').value,
+    tel: document.getElementById('asegTel').value,
+    telAut: document.getElementById('asegTelAut').value,
+    email: document.getElementById('asegEmail').value,
+    web: document.getElementById('asegWeb').value,
+    ejecutivo: document.getElementById('asegEjecutivo').value,
+    telEj: document.getElementById('asegTelEj').value,
+    codProv: document.getElementById('asegCodProv').value,
+    red: document.getElementById('asegRed').value,
+    deducible: parseFloat(document.getElementById('asegDeducible').value)||0,
+    cobertura: parseFloat(document.getElementById('asegCobertura').value)||0,
+    procedimientos: document.getElementById('asegProcedimientos').value,
+    notas: document.getElementById('asegNotas').value,
+  };
+  if (editingAsegId) {
+    const idx = aseguradoras.findIndex(a => a.id === editingAsegId);
+    if (idx >= 0) aseguradoras[idx] = { ...aseguradoras[idx], ...datos };
+  } else {
+    const ctr = LS.get('mc_counters', {});
+    ctr.aseg = (ctr.aseg||0)+1;
+    LS.set('mc_counters', ctr);
+    aseguradoras.push({ id:`ASG-${String(ctr.aseg).padStart(3,'0')}`, ...datos, creado: fecha() });
+  }
+  LS.set('mc_aseguradoras', aseguradoras);
+  cerrarModal('modalAseguradora');
+  renderLista();
+  if (asegSelId) selAseguradora(asegSelId);
+}
+
+// ════════════════════════════════════════
+//  MODAL SOLICITUD
+// ════════════════════════════════════════
+function abrirNuevaSolicitud() {
+  solParaAseg = null;
+  abrirSolicitud();
+}
+function abrirNuevaSolicitudPara() {
+  solParaAseg = asegSelId;
+  abrirSolicitud();
+}
+function abrirSolicitud() {
+  solStepActual = 1; tipoSolicitud = null;
+  document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('btnSiguiente1').disabled = true;
+  mostrarStep(1);
+  // Cargar pacientes
+  const sel = document.getElementById('solPaciente');
+  sel.innerHTML = '<option value="">Seleccionar paciente...</option>';
+  LS.get('mc_pacientes').forEach(p => {
+    sel.innerHTML += `<option value="${p.nombre||''} ${p.apellido||''}">${p.apellido||''}, ${p.nombre||''}</option>`;
+  });
+  if (!LS.get('mc_pacientes').length) {
+    ['García, Ana','López, Carlos','Rodríguez, María','Martínez, Juan'].forEach(n =>
+      sel.innerHTML += `<option value="${n}">${n}</option>`);
+  }
+  // Cargar aseguradoras
+  const selA = document.getElementById('solAseguradora');
+  selA.innerHTML = '<option value="">Seleccionar...</option>';
+  LS.get('mc_aseguradoras').forEach(a => {
+    selA.innerHTML += `<option value="${a.nombre}" data-id="${a.id}"${solParaAseg===a.id?' selected':''}>${a.nombre}</option>`;
+  });
+  document.getElementById('solFechaServ').value = fecha();
+  document.getElementById('modalSolicitud').classList.add('open');
+}
+
+function selTipo(tipo, el) {
+  tipoSolicitud = tipo;
+  document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('btnSiguiente1').disabled = false;
+}
+
+function irStep(n) {
+  solStepActual = n;
+  mostrarStep(n);
+  // Update progress
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('step'+i);
+    el.classList.remove('active','done');
+    if (i < n) el.classList.add('done');
+    else if (i === n) el.classList.add('active');
+  }
+  if (n === 4) renderResumen();
+}
+
+function mostrarStep(n) {
+  ['solStep1','solStep2','solStep3','solStep4'].forEach((id,i) => {
+    document.getElementById(id).style.display = (i+1 === n) ? 'block' : 'none';
+  });
+}
+
+function cargarDatosPaciente() {
+  document.getElementById('infoPaciente').style.display = 'flex';
+}
+
+function renderResumen() {
+  const aseg = document.getElementById('solAseguradora').value;
+  const pac = document.getElementById('solPaciente').value;
+  document.getElementById('resumenSolicitud').innerHTML = `
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+      <div><strong>Tipo:</strong> ${tipoLabel(tipoSolicitud)}</div>
+      <div><strong>Aseguradora:</strong> ${aseg}</div>
+      <div><strong>Paciente:</strong> ${pac}</div>
+      <div><strong>Póliza:</strong> ${document.getElementById('solPoliza').value||'—'}</div>
+      <div><strong>Fecha de Servicio:</strong> ${formatF(document.getElementById('solFechaServ').value)}</div>
+      <div><strong>Diagnóstico:</strong> ${document.getElementById('solDiag').value}</div>
+      <div><strong>Procedimiento:</strong> ${document.getElementById('solProcedimiento').value}</div>
+      <div><strong>Monto Solicitado:</strong> $${fmt(parseFloat(document.getElementById('solMonto').value)||0)}</div>
+      <div><strong>Prioridad:</strong> ${document.getElementById('solPrioridad').value.toUpperCase()}</div>
+      <div><strong>No. Aut. Previa:</strong> ${document.getElementById('solNumAut').value||'Ninguna'}</div>
+    </div>
+    <div style="margin-top:12px;"><strong>Justificación:</strong><br>${document.getElementById('solJustificacion').value}</div>
+  `;
+}
+
+function guardarSolicitud() {
+  const soles = LS.get('mc_solicitudes');
+  const ctr = LS.get('mc_counters', {});
+  ctr.solicitud = (ctr.solicitud||0)+1;
+  LS.set('mc_counters', ctr);
+  const asegEl = document.getElementById('solAseguradora');
+  const asegOpt = asegEl.options[asegEl.selectedIndex];
+  const nueva = {
+    id: `SOL-${new Date().getFullYear()}-${String(ctr.solicitud).padStart(4,'0')}`,
+    tipo: tipoSolicitud,
+    aseguradora: asegEl.value,
+    aseguradoraId: asegOpt?.dataset?.id || '',
+    paciente: document.getElementById('solPaciente').value,
+    poliza: document.getElementById('solPoliza').value,
+    titular: document.getElementById('solTitular').value,
+    diagnostico: document.getElementById('solDiag').value,
+    diagnostico2: document.getElementById('solDiag2').value,
+    procedimiento: document.getElementById('solProcedimiento').value,
+    cpt: document.getElementById('solCpt').value,
+    hospital: document.getElementById('solHospital').value,
+    monto: parseFloat(document.getElementById('solMonto').value)||0,
+    prioridad: document.getElementById('solPrioridad').value,
+    numAut: document.getElementById('solNumAut').value,
+    justificacion: document.getElementById('solJustificacion').value,
+    notas: document.getElementById('solNotas').value,
+    estado: 'pendiente',
+    fechaCreacion: fecha(),
+    fechaServicio: document.getElementById('solFechaServ').value,
+    documentos: [],
+  };
+  soles.push(nueva);
+  LS.set('mc_solicitudes', soles);
+  cerrarModal('modalSolicitud');
+  renderSolicitudes();
+  if (asegSelId) selAseguradora(asegSelId);
+  return nueva;
+}
+
+function guardarYGenerarPDF() {
+  const nueva = guardarSolicitud();
+  setTimeout(() => generarCartaSolicitudObj(nueva), 100);
+}
+
+// ════════════════════════════════════════
+//  VER / ESTADO SOLICITUD
+// ════════════════════════════════════════
+function verSolicitud(id) {
+  const s = LS.get('mc_solicitudes').find(s => s.id === id);
+  if (!s) return;
+  const info = `
+📋 ID: ${s.id}
+🏥 Aseguradora: ${s.aseguradora}
+👶 Paciente: ${s.paciente} | Póliza: ${s.poliza||'—'}
+📅 Fecha Creación: ${formatF(s.fechaCreacion)}
+🗓️ Fecha Servicio: ${formatF(s.fechaServicio)}
+🔬 Diagnóstico: ${s.diagnostico}
+🔪 Procedimiento: ${s.procedimiento}
+💰 Monto Solicitado: $${fmt(s.monto||0)}
+⚡ Prioridad: ${s.prioridad?.toUpperCase()}
+📊 Estado: ${estadoLabel(s.estado)}
+🔑 No. Autorización: ${s.numAut||'Pendiente'}
+
+📝 Justificación:
+${s.justificacion}
+  `.trim();
+  alert(info);
+}
+
+function cambiarEstado(id) {
+  const estados = ['pendiente','enviado','en-proceso','aprobado','rechazado'];
+  const soles = LS.get('mc_solicitudes');
+  const idx = soles.findIndex(s => s.id === id);
+  if (idx < 0) return;
+  const actual = soles[idx].estado;
+  const siguiente = prompt(`Estado actual: ${estadoLabel(actual)}\n\nNuevo estado:\n1. pendiente\n2. enviado\n3. en-proceso\n4. aprobado\n5. rechazado\n\nEscribe el nombre del nuevo estado:`);
+  if (siguiente && estados.includes(siguiente)) {
+    soles[idx].estado = siguiente;
+    if (siguiente === 'aprobado') {
+      const numAut = prompt('No. de Autorización otorgado:');
+      if (numAut) soles[idx].numAut = numAut;
+    }
+    LS.set('mc_solicitudes', soles);
+    renderSolicitudes();
+    if (asegSelId) selAseguradora(asegSelId);
+  }
+}
+
+// ════════════════════════════════════════
+//  GENERAR CARTA PDF (print)
+// ════════════════════════════════════════
+function generarCartaSolicitud(id) {
+  const s = LS.get('mc_solicitudes').find(x=>x.id===id);
+  if (!s) return;
+  generarCartaSolicitudObj(s);
+}
+
+function generarCartaSolicitudObj(s) {
+  const hoy = new Date().toLocaleDateString('es-DO',{day:'2-digit',month:'long',year:'numeric'});
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Solicitud ${s.id}</title>
+<style>
+  body { font-family: 'Times New Roman', serif; margin: 0; padding: 40px; color: #2C3E50; font-size: 12pt; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #1B3A5C; padding-bottom: 16px; margin-bottom: 20px; }
+  .logo-area h1 { color: #1B3A5C; font-size: 16pt; margin: 0; }
+  .logo-area p { color: #0E7C7B; margin: 2px 0; font-size: 10pt; }
+  .ref-box { background: #EAF4F4; border: 1px solid #D5E8E8; padding: 10px 16px; border-radius: 6px; text-align: right; font-size: 10pt; }
+  h2 { color: #1B3A5C; font-size: 13pt; margin: 20px 0 8px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #D5E8E8; padding-bottom: 4px; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; margin-bottom: 16px; font-size: 11pt; }
+  .info-grid strong { color: #1B3A5C; }
+  .justif { background: #F9FBFB; border-left: 4px solid #0E7C7B; padding: 12px 16px; margin: 12px 0; font-size: 11pt; line-height: 1.6; }
+  .firma { margin-top: 60px; }
+  .firma-line { border-top: 1px solid #1B3A5C; width: 260px; margin-bottom: 4px; }
+  .urgente { color: #E74C3C; font-weight: bold; font-size: 13pt; }
+  @media print { body { padding: 20px; } }
+</style></head><body>
+<div class="header">
+  <div class="logo-area">
+    <div style="border-top:4px solid #1B5FA8;padding-top:8px;padding-bottom:6px;border-bottom:1.5px solid #CBD5E1;margin-bottom:0;">
+      <div style="font-size:14pt;font-weight:800;color:#1A2A4A;">Dr. Lorenzo Ernesto Otaño Santiago</div>
+      <div style="font-size:9pt;color:#2E9DD4;font-weight:600;margin:3px 0 2px;">Cirujano Pediátrico &nbsp;·&nbsp; Neonatólogo &nbsp;·&nbsp; Laparoscopista</div>
+      <div style="font-size:8pt;color:#64748b;">Exequátur: 573-05 &nbsp;|&nbsp; CMD: 19077 &nbsp;|&nbsp; WhatsApp: 829-383-4449</div>
+    </div>
+  </div>
+  <div class="ref-box">
+    <div><strong>Referencia:</strong> ${s.id}</div>
+    <div><strong>Fecha:</strong> ${hoy}</div>
+    <div><strong>Estado:</strong> ${estadoLabel(s.estado)}</div>
+    ${s.prioridad === 'urgente' || s.prioridad === 'emergencia' ? `<div class="urgente">⚡ ${s.prioridad.toUpperCase()}</div>` : ''}
+  </div>
+</div>
+
+<p><strong>Señores</strong><br>${s.aseguradora}<br>Departamento de Autorizaciones</p>
+<p>Estimados señores:</p>
+<p>Por medio de la presente, me dirijo a ustedes para ${tipoTexto(s.tipo)} para el/la paciente identificado/a a continuación:</p>
+
+<h2>Datos del Paciente</h2>
+<div class="info-grid">
+  <div><strong>Nombre:</strong> ${s.paciente}</div>
+  <div><strong>No. Póliza:</strong> ${s.poliza||'—'}</div>
+  <div><strong>Titular:</strong> ${s.titular||'—'}</div>
+  <div><strong>Fecha Servicio:</strong> ${formatF(s.fechaServicio)}</div>
+</div>
+
+<h2>Información Clínica</h2>
+<div class="info-grid">
+  <div><strong>Diagnóstico:</strong> ${s.diagnostico}</div>
+  ${s.diagnostico2 ? `<div><strong>Diag. Secundario:</strong> ${s.diagnostico2}</div>` : '<div></div>'}
+  <div><strong>Procedimiento:</strong> ${s.procedimiento||'—'}</div>
+  ${s.cpt ? `<div><strong>Código CPT:</strong> ${s.cpt}</div>` : '<div></div>'}
+  ${s.hospital ? `<div><strong>Centro/Hospital:</strong> ${s.hospital}</div>` : '<div></div>'}
+  <div><strong>Monto Solicitado:</strong> RD$ ${fmt(s.monto||0)}</div>
+</div>
+
+<h2>Justificación Médica</h2>
+<div class="justif">${s.justificacion}</div>
+
+${s.numAut ? `<p><strong>No. de Autorización Previo:</strong> ${s.numAut}</p>` : ''}
+${s.notas ? `<p><strong>Notas adicionales:</strong> ${s.notas}</p>` : ''}
+
+<p>Agradecemos su pronta atención a esta solicitud. Para cualquier información adicional, no dude en contactarnos.</p>
+
+<div class="firma">
+  <div class="firma-line"></div>
+  <p><strong>Dr. Lorenzo Ernesto Otaño Santiago</strong><br>Cirujano Pediátrico · Neonatólogo · Laparoscopista<br>Exequátur: 573-05 &nbsp;|&nbsp; CMD: 19077<br>WhatsApp: 829-383-4449</p>
+</div>
+</body></html>`;
+
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(() => w.print(), 600);
+}
+
+function tipoTexto(t) {
+  const map = { autorizacion_cirugia:'solicitar autorización del procedimiento quirúrgico', autorizacion_consulta:'solicitar autorización de consulta médica especializada',
+    referimiento:'hacer referimiento', reclamacion:'presentar reclamación de servicios prestados', apelacion:'apelar la decisión tomada respecto a la solicitud anterior', certificado:'emitir certificado médico' };
+  return map[t] || t;
+}
+
+function cerrarModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ════════════════════════════════════════
+//  TABS
+// ════════════════════════════════════════
+function cambiarTab(id, btn) {
+  // Solo afecta los tabs del panelDetalle
+  const panel = document.getElementById('panelDetalle');
+  panel.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  panel.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+}
+
+// ════════════════════════════════════════
+//  HELPERS — AGING
+// ════════════════════════════════════════
+function aging(fechaStr) {
+  if (!fechaStr) return 0;
+  return Math.floor((new Date() - new Date(fechaStr + 'T00:00:00')) / 86400000);
+}
+function agingBadge(dias) {
+  if (dias <= 7)  return `<span class="age-ok">✓ ${dias}d</span>`;
+  if (dias <= 30) return `<span class="age-warn">⚠ ${dias}d</span>`;
+  return `<span class="age-crit">🔴 ${dias}d</span>`;
+}
+function esPendienteCobro(s) {
+  return ['pendiente','enviado','en-proceso','aprobado'].includes(s.estado);
+}
+
+// ════════════════════════════════════════
+//  DASHBOARD GLOBAL
+// ════════════════════════════════════════
+function renderDashboardGlobal() {
+  const soles = LS.get('mc_solicitudes');
+
+  const pendientes   = soles.filter(esPendienteCobro);
+  const vencidas     = pendientes.filter(s => aging(s.fechaCreacion) > 30);
+  const montoPend    = pendientes.reduce((acc, s) => acc + (s.monto || 0), 0);
+  const pagadas      = soles.filter(s => s.estado === 'pagado');
+  const montoPagado  = pagadas.reduce((acc, s) => acc + (s.montoCobrado || s.monto || 0), 0);
+  const tasaAprobacion = soles.length ? Math.round((soles.filter(s=>s.estado==='aprobado'||s.estado==='pagado').length / soles.length) * 100) : 0;
+
+  const byArs = {};
+  pendientes.forEach(s => {
+    if (!byArs[s.aseguradora]) byArs[s.aseguradora] = { count: 0, monto: 0, vencidas: 0 };
+    byArs[s.aseguradora].count++;
+    byArs[s.aseguradora].monto += s.monto || 0;
+    if (aging(s.fechaCreacion) > 30) byArs[s.aseguradora].vencidas++;
+  });
+  const arsRows = Object.entries(byArs).sort((a,b) => b[1].monto - a[1].monto).slice(0, 6);
+  const maxMonto = arsRows.length ? arsRows[0][1].monto : 1;
+
+  const recientes = [...pendientes].sort((a,b) => b.fechaCreacion.localeCompare(a.fechaCreacion)).slice(0, 5);
+
+  const body = document.getElementById('dashboard-global-body');
+  if (!body) return;
+  body.innerHTML = `
+    <div class="kpi-grid">
+      <div class="kpi-card" style="background:#FFF8F0;border-color:#FCA25A;">
+        <div class="kv" style="color:#C05621;">RD$ ${fmt(montoPend)}</div>
+        <div class="kl" style="color:#C05621;">💰 Pendiente de Cobro</div>
+        <div style="font-size:.75rem;color:#888;margin-top:4px;">${pendientes.length} solicitudes</div>
+      </div>
+      <div class="kpi-card" style="background:#FFF0F0;border-color:#FC8181;">
+        <div class="kv" style="color:#C53030;">${vencidas.length}</div>
+        <div class="kl" style="color:#C53030;">🔴 Vencidas (+30 días)</div>
+        <div style="font-size:.75rem;color:#888;margin-top:4px;">RD$ ${fmt(vencidas.reduce((a,s)=>a+(s.monto||0),0))}</div>
+      </div>
+      <div class="kpi-card" style="background:#F0FFF4;border-color:#68D391;">
+        <div class="kv" style="color:#276749;">RD$ ${fmt(montoPagado)}</div>
+        <div class="kl" style="color:#276749;">✅ Cobrado / Pagado</div>
+        <div style="font-size:.75rem;color:#888;margin-top:4px;">${pagadas.length} completadas</div>
+      </div>
+      <div class="kpi-card" style="background:#EBF8FF;border-color:#63B3ED;">
+        <div class="kv" style="color:#2B6CB0;">${tasaAprobacion}%</div>
+        <div class="kl" style="color:#2B6CB0;">📈 Tasa de Aprobación</div>
+        <div style="font-size:.75rem;color:#888;margin-top:4px;">${soles.length} solicitudes totales</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div>
+        <div style="font-size:.8rem;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">🏥 Pendiente por Aseguradora</div>
+        ${arsRows.length ? arsRows.map(([nombre, d]) => `
+          <div style="margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+              <span style="font-size:.83rem;font-weight:700;color:var(--navy);">${nombre}</span>
+              <div style="display:flex;gap:8px;align-items:center;">
+                ${d.vencidas > 0 ? `<span style="font-size:.7rem;background:#FFF5F5;color:#C53030;border:1px solid #FEB2B2;border-radius:4px;padding:1px 6px;font-weight:700;">🔴 ${d.vencidas} vencidas</span>` : ''}
+                <span style="font-size:.82rem;font-weight:700;color:var(--teal);">RD$ ${fmt(d.monto)}</span>
+              </div>
+            </div>
+            <div style="height:7px;background:#e2e8f0;border-radius:4px;overflow:hidden;">
+              <div style="height:100%;width:${Math.round(d.monto/maxMonto*100)}%;background:${d.vencidas > 0 ? '#FC8181' : 'var(--teal)'};border-radius:4px;transition:width .4s;"></div>
+            </div>
+            <div style="font-size:.7rem;color:#888;margin-top:2px;">${d.count} solicitud(es)</div>
+          </div>`).join('') : '<div style="color:var(--text-light);font-size:.85rem;padding:12px 0;">Sin pendientes ✓</div>'}
+      </div>
+      <div>
+        <div style="font-size:.8rem;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">⏰ Solicitudes Pendientes Recientes</div>
+        ${recientes.length ? recientes.map(s => `
+          <div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);align-items:center;">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:.83rem;font-weight:700;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.paciente}</div>
+              <div style="font-size:.75rem;color:var(--text-light);">${s.aseguradora} · ${s.procedimiento||'—'}</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0;">
+              <div style="font-size:.82rem;font-weight:700;color:var(--teal);">$${fmt(s.monto||0)}</div>
+              <div style="font-size:.72rem;">${agingBadge(aging(s.fechaCreacion))}</div>
+            </div>
+            <button class="qs-btn" onclick="modalCambiarEstado('${s.id}')" title="Cambiar estado">🔄</button>
+          </div>`).join('') : '<div style="color:var(--text-light);font-size:.85rem;padding:12px 0;">Sin pendientes ✓</div>'}
+      </div>
+    </div>
+  `;
+}
+
+// ════════════════════════════════════════
+//  TABS GLOBALES (panel solicitudes)
+// ════════════════════════════════════════
+function cambiarTabGlobal(tab, btn) {
+  document.querySelectorAll('.gtab').forEach(t => { t.style.display = 'none'; t.classList.remove('active'); });
+  document.querySelectorAll('[onclick^="cambiarTabGlobal"]').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById('gtab-' + tab);
+  if (el) { el.style.display = 'block'; el.classList.add('active'); }
+  if (btn) btn.classList.add('active');
+
+  if (tab === 'pendientes')   renderPendientesDeCobro();
+  if (tab === 'por-paciente') renderPorPaciente();
+  if (tab === 'por-ars')      renderPorArs();
+}
+
+// ════════════════════════════════════════
+//  PENDIENTES DE COBRO
+// ════════════════════════════════════════
+function renderPendientesDeCobro() {
+  const data = LS.get('mc_solicitudes').filter(esPendienteCobro)
+    .sort((a,b) => aging(b.fechaCreacion) - aging(a.fechaCreacion));
+  const cont = document.getElementById('tablaPendientes');
+  if (!data.length) { cont.innerHTML = '<div class="empty"><div class="icon">✅</div><p>¡Sin pendientes de cobro!</p></div>'; return; }
+  const total = data.reduce((a,s)=>a+(s.monto||0),0);
+  cont.innerHTML = `
+    <table>
+      <thead><tr>
+        <th>ID</th><th>Paciente</th><th>Aseguradora</th><th>Servicio</th>
+        <th>Monto</th><th>Estado</th><th>Días</th><th>Acciones</th>
+      </tr></thead>
+      <tbody>
+        ${data.map(s => {
+          const dias = aging(s.fechaCreacion);
+          const rowStyle = dias > 30 ? 'background:#FFF5F5;' : dias > 14 ? 'background:#FFFDF0;' : '';
+          return `<tr style="${rowStyle}">
+            <td style="font-family:monospace;font-size:.78rem;">${s.id}</td>
+            <td><strong>${s.paciente}</strong><br><span style="font-size:.72rem;color:#888;">${s.poliza||''}</span></td>
+            <td>${s.aseguradora}</td>
+            <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${s.procedimiento||''}">${s.procedimiento||'—'}</td>
+            <td class="amount" style="color:var(--teal);">RD$ ${fmt(s.monto||0)}</td>
+            <td><span class="badge-status badge-${s.estado}">${estadoLabel(s.estado)}</span></td>
+            <td>${agingBadge(dias)}</td>
+            <td style="white-space:nowrap;">
+              <button onclick="modalCambiarEstado('${s.id}')" class="qs-btn" style="color:var(--teal);">🔄 Estado</button>
+              <button onclick="marcarPagado('${s.id}')" class="qs-btn" style="margin-left:4px;color:var(--green);">💚 Pagado</button>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    <div style="padding:10px 16px;font-size:.82rem;color:var(--text-light);text-align:right;border-top:1px solid var(--border);background:var(--bg);">
+      ${data.length} solicitudes pendientes · <strong style="color:var(--orange);">Total: RD$ ${fmt(total)}</strong>
+    </div>`;
+}
+
+// ════════════════════════════════════════
+//  PENDIENTES POR PACIENTE
+// ════════════════════════════════════════
+function renderPorPaciente() {
+  const data = LS.get('mc_solicitudes').filter(esPendienteCobro);
+  const byPac = {};
+  data.forEach(s => {
+    if (!byPac[s.paciente]) byPac[s.paciente] = { soles: [], monto: 0 };
+    byPac[s.paciente].soles.push(s);
+    byPac[s.paciente].monto += s.monto || 0;
+  });
+  const rows = Object.entries(byPac).sort((a,b) => b[1].monto - a[1].monto);
+  const cont = document.getElementById('tablaPorPaciente');
+  if (!rows.length) { cont.innerHTML = '<div class="empty"><div class="icon">✅</div><p>Sin pendientes por paciente</p></div>'; return; }
+  const montoTotal = rows.reduce((a,[,v]) => a + v.monto, 0);
+  cont.innerHTML = `
+    <table>
+      <thead><tr><th>Paciente</th><th>Aseguradora(s)</th><th>Solicitudes</th><th>Monto Pendiente</th><th>Más antigua</th><th>Acciones</th></tr></thead>
+      <tbody>
+        ${rows.map(([pac, d]) => {
+          const arsSet = [...new Set(d.soles.map(s=>s.aseguradora))].join(', ');
+          const masVieja = Math.max(...d.soles.map(s => aging(s.fechaCreacion)));
+          return `<tr>
+            <td><strong>${pac}</strong></td>
+            <td style="font-size:.8rem;">${arsSet}</td>
+            <td style="text-align:center;font-weight:700;">${d.soles.length}</td>
+            <td class="amount" style="color:var(--orange);font-size:.95rem;">RD$ ${fmt(d.monto)}</td>
+            <td>${agingBadge(masVieja)}</td>
+            <td>
+              <button class="qs-btn" onclick="verSolicitudesPaciente('${pac.replace(/'/g,"\\\'")}')" style="color:var(--teal);">👁 Ver</button>
+            </td>
+          </tr>`;
+        }).join('')}
+        <tr class="acct-row-total">
+          <td colspan="3">TOTAL PENDIENTE</td>
+          <td class="amount" style="color:var(--red);">RD$ ${fmt(montoTotal)}</td>
+          <td colspan="2"></td>
+        </tr>
+      </tbody>
+    </table>`;
+}
+
+// ════════════════════════════════════════
+//  PENDIENTES POR ARS
+// ════════════════════════════════════════
+function renderPorArs() {
+  const data = LS.get('mc_solicitudes').filter(esPendienteCobro);
+  const byArs = {};
+  data.forEach(s => {
+    if (!byArs[s.aseguradora]) byArs[s.aseguradora] = { soles: [], monto: 0, vencidas: 0 };
+    byArs[s.aseguradora].soles.push(s);
+    byArs[s.aseguradora].monto += s.monto || 0;
+    if (aging(s.fechaCreacion) > 30) byArs[s.aseguradora].vencidas++;
+  });
+  const rows = Object.entries(byArs).sort((a,b) => b[1].monto - a[1].monto);
+  const cont = document.getElementById('tablaPorArs');
+  if (!rows.length) { cont.innerHTML = '<div class="empty"><div class="icon">✅</div><p>Sin pendientes por aseguradora</p></div>'; return; }
+  const montoTotal = rows.reduce((a,[,v]) => a + v.monto, 0);
+  cont.innerHTML = `
+    <table>
+      <thead><tr><th>Aseguradora</th><th>Solicitudes</th><th>Vencidas (+30d)</th><th>Monto Pendiente</th><th>Acciones</th></tr></thead>
+      <tbody>
+        ${rows.map(([ars, d]) => `<tr ${d.vencidas > 0 ? 'style="background:#FFF5F5;"' : ''}>
+          <td><strong>${ars}</strong></td>
+          <td style="text-align:center;">${d.soles.length}</td>
+          <td style="text-align:center;">${d.vencidas > 0 ? `<span class="age-crit">🔴 ${d.vencidas}</span>` : '<span class="age-ok">✓ 0</span>'}</td>
+          <td class="amount" style="color:${d.vencidas>0?'var(--red)':'var(--orange)'};">RD$ ${fmt(d.monto)}</td>
+          <td>
+            <button class="qs-btn" onclick="selAseguradoraByName('${ars.replace(/'/g,"\\\'")}')" style="color:var(--teal);">📂 Ver</button>
+          </td>
+        </tr>`).join('')}
+        <tr class="acct-row-total">
+          <td colspan="3">TOTAL PENDIENTE</td>
+          <td class="amount" style="color:var(--red);">RD$ ${fmt(montoTotal)}</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>`;
+}
+
+// ════════════════════════════════════════
+//  CUENTA CORRIENTE POR ARS
+// ════════════════════════════════════════
+function renderTabCuenta(soles, aseg) {
+  const container = document.getElementById('tab-cuenta');
+  if (!container) return;
+
+  const byPac = {};
+  soles.forEach(s => {
+    if (!byPac[s.paciente]) byPac[s.paciente] = { total: 0, pagado: 0, pendiente: 0, soles: [] };
+    const monto = s.monto || 0;
+    const cobrado = s.montoCobrado || (s.estado === 'pagado' ? monto : 0);
+    byPac[s.paciente].total += monto;
+    byPac[s.paciente].pagado += cobrado;
+    byPac[s.paciente].pendiente += esPendienteCobro(s) ? monto : 0;
+    byPac[s.paciente].soles.push(s);
+  });
+
+  const rows = Object.entries(byPac).sort((a,b) => b[1].pendiente - a[1].pendiente);
+  if (!rows.length) { container.innerHTML = '<div class="empty"><div class="icon">💳</div><p>Sin movimientos</p></div>'; return; }
+
+  const totalPend = rows.reduce((a,[,v]) => a + v.pendiente, 0);
+  const totalPag  = rows.reduce((a,[,v]) => a + v.pagado, 0);
+
+  container.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">
+      <div class="stat-mini"><div class="val" style="color:var(--orange);">RD$ ${fmt(totalPend)}</div><div class="lbl">Pendiente</div></div>
+      <div class="stat-mini"><div class="val" style="color:var(--green);">RD$ ${fmt(totalPag)}</div><div class="lbl">Cobrado</div></div>
+      <div class="stat-mini"><div class="val">${rows.length}</div><div class="lbl">Pacientes</div></div>
+    </div>
+    <table>
+      <thead><tr><th>Paciente</th><th>Póliza</th><th>Solicitudes</th><th>Total</th><th>Cobrado</th><th>Pendiente</th><th>Acciones</th></tr></thead>
+      <tbody>
+        ${rows.map(([pac, d]) => {
+          return `<tr ${d.pendiente > 0 ? 'style="background:#FFFDF0;"' : ''}>
+            <td><strong>${pac}</strong></td>
+            <td style="font-size:.78rem;color:#888;">${d.soles[0]?.poliza||'—'}</td>
+            <td style="text-align:center;">${d.soles.length}</td>
+            <td class="amount">RD$ ${fmt(d.total)}</td>
+            <td class="amount" style="color:var(--green);">RD$ ${fmt(d.pagado)}</td>
+            <td class="amount" style="color:${d.pendiente>0?'var(--orange)':'var(--green)'};">
+              ${d.pendiente > 0 ? `RD$ ${fmt(d.pendiente)}` : '✅ Al día'}
+            </td>
+            <td>
+              ${d.pendiente > 0 ? `<button class="qs-btn" onclick="verSolicitudesPaciente('${pac.replace(/'/g,"\\\'")}')" style="color:var(--teal);">👁 Ver</button>` : ''}
+            </td>
+          </tr>`;
+        }).join('')}
+        <tr class="acct-row-total">
+          <td colspan="4">TOTALES</td>
+          <td class="amount" style="color:var(--green);">RD$ ${fmt(totalPag)}</td>
+          <td class="amount" style="color:var(--orange);">RD$ ${fmt(totalPend)}</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>`;
+}
+
+// ════════════════════════════════════════
+//  MODAL CAMBIAR ESTADO
+// ════════════════════════════════════════
+function modalCambiarEstado(id) {
+  const s = LS.get('mc_solicitudes').find(x => x.id === id);
+  if (!s) return;
+  const estados = [
+    ['pendiente','⏳ Pendiente'],['enviado','📤 Enviado'],['en-proceso','🔄 En Proceso'],
+    ['aprobado','✅ Aprobado'],['rechazado','❌ Rechazado'],['pagado','💚 Pagado']
+  ];
+  const nuevo = prompt(
+    `Cambiar estado de:\n"${s.paciente} — ${s.procedimiento||s.diagnostico}"\n\nEstado actual: ${estadoLabel(s.estado)}\n\nEscribe el nuevo estado:\n${estados.map(([v,l])=>`  ${v} → ${l}`).join('\n')}`,
+    s.estado
+  );
+  if (!nuevo || nuevo === s.estado) return;
+  if (!estados.find(([v]) => v === nuevo)) { alert('Estado no válido'); return; }
+  cambiarEstadoRapido(id, nuevo);
+}
+
+function cambiarEstadoRapido(id, nuevoEstado) {
+  const soles = LS.get('mc_solicitudes');
+  const idx = soles.findIndex(s => s.id === id);
+  if (idx < 0) return;
+  soles[idx].estado = nuevoEstado;
+  if (nuevoEstado === 'pagado') {
+    soles[idx].montoCobrado = soles[idx].montoCobrado || soles[idx].monto;
+    soles[idx].fechaPago = new Date().toISOString().split('T')[0];
+  }
+  LS.set('mc_solicitudes', soles);
+  renderAll();
+  if (asegSelId) selAseguradora(asegSelId);
+}
+
+function marcarPagado(id) {
+  if (!confirm('¿Marcar esta solicitud como PAGADA?')) return;
+  cambiarEstadoRapido(id, 'pagado');
+}
+
+function verSolicitudesPaciente(pacNombre) {
+  document.getElementById('buscarSol').value = pacNombre;
+  cambiarTabGlobal('todas', document.querySelector('[onclick^="cambiarTabGlobal(\'todas"]'));
+  filtrarSolicitudes();
+}
+
+function selAseguradoraByName(nombre) {
+  const aseg = LS.get('mc_aseguradoras').find(a => a.nombre === nombre);
+  if (aseg) selAseguradora(aseg.id);
+}
+
+function renderAll() {
+  renderLista();
+  renderSolicitudes();
+  renderDashboardGlobal();
+  _honRender();
+}
+
+// ════════════════════════════════════════
+//  HONORARIOS POR PROCEDIMIENTO / ARS
+// ════════════════════════════════════════
+function _honRender() {
+  const hons = LS.get('mc_honorarios', []);
+  const arsF = document.getElementById('hon-filtro-ars')?.value || '';
+  const procF = (document.getElementById('hon-filtro-proc')?.value || '').toLowerCase();
+
+  // Poblar filtros
+  const aseguradoras = LS.get('mc_aseguradoras');
+  const arsEl = document.getElementById('hon-filtro-ars');
+  if (arsEl && arsEl.options.length <= 1) {
+    aseguradoras.forEach(a => {
+      const o = document.createElement('option');
+      o.value = a.nombre; o.textContent = a.nombre;
+      arsEl.appendChild(o);
+    });
+  }
+  const procEl = document.getElementById('hon-filtro-proc');
+  if (procEl && procEl.options.length <= 1) {
+    const procs = [...new Set(hons.map(h => h.procedimiento))].sort();
+    procs.forEach(p => {
+      const o = document.createElement('option');
+      o.value = p; o.textContent = p;
+      procEl.appendChild(o);
+    });
+  }
+
+  const data = hons.filter(h =>
+    (!arsF || h.ars === arsF) &&
+    (!procF || h.procedimiento.toLowerCase().includes(procF))
+  ).sort((a,b) => a.ars.localeCompare(b.ars) || a.procedimiento.localeCompare(b.procedimiento));
+
+  const container = document.getElementById('tabla-honorarios');
+  if (!container) return;
+
+  if (!data.length) {
+    container.innerHTML = `<div class="empty" style="padding:40px;text-align:center;">
+      <div style="font-size:2.5rem;margin-bottom:10px;">💲</div>
+      <div style="font-weight:600;color:#475569;margin-bottom:6px;">Sin tarifas registradas</div>
+      <div style="font-size:.8rem;color:#94a3b8;margin-bottom:16px;">Registra los honorarios por procedimiento para cada aseguradora</div>
+      <button class="btn-primary" onclick="_honAbrirModal()">+ Agregar primer honorario</button>
+    </div>`;
+    return;
+  }
+
+  // Agrupar por ARS
+  const byArs = {};
+  data.forEach(h => {
+    if (!byArs[h.ars]) byArs[h.ars] = [];
+    byArs[h.ars].push(h);
+  });
+
+  let html = '';
+  Object.entries(byArs).forEach(([ars, items]) => {
+    const totalSolicitado = items.reduce((a,h) => a + (h.monto||0), 0);
+    const totalAprobado   = items.reduce((a,h) => a + (h.aprobado||0), 0);
+    const pctRec = totalSolicitado > 0 ? Math.round(totalAprobado / totalSolicitado * 100) : 0;
+
+    html += `<div style="margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:var(--navy);color:white;border-radius:8px 8px 0 0;">
+        <div style="font-weight:700;font-size:.92rem;">🏥 ${ars}</div>
+        <div style="display:flex;gap:16px;font-size:.78rem;opacity:.9;">
+          <span>📋 ${items.length} procedimiento${items.length>1?'s':''}</span>
+          <span>Solicitado: <strong>RD$ ${fmt(totalSolicitado)}</strong></span>
+          <span>Aprobado: <strong style="color:#86efac;">RD$ ${fmt(totalAprobado)}</strong></span>
+          <span>Recuperación: <strong style="color:${pctRec>=80?'#86efac':pctRec>=60?'#fde68a':'#fca5a5'};">${pctRec}%</strong></span>
+        </div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;overflow:hidden;">
+        <thead>
+          <tr style="background:#f8fafc;border-bottom:1px solid var(--border);">
+            <th style="padding:8px 12px;text-align:left;font-size:.72rem;font-weight:700;text-transform:uppercase;color:#64748b;">Procedimiento</th>
+            <th style="padding:8px 12px;text-align:left;font-size:.72rem;font-weight:700;text-transform:uppercase;color:#64748b;">CPT / CIE-10</th>
+            <th style="padding:8px 12px;text-align:right;font-size:.72rem;font-weight:700;text-transform:uppercase;color:#64748b;">Solicitado</th>
+            <th style="padding:8px 12px;text-align:right;font-size:.72rem;font-weight:700;text-transform:uppercase;color:#64748b;">Cob. %</th>
+            <th style="padding:8px 12px;text-align:right;font-size:.72rem;font-weight:700;text-transform:uppercase;color:#64748b;">Aprobado histórico</th>
+            <th style="padding:8px 12px;text-align:center;font-size:.72rem;font-weight:700;text-transform:uppercase;color:#64748b;">Días resp.</th>
+            <th style="padding:8px 12px;text-align:center;font-size:.72rem;font-weight:700;text-transform:uppercase;color:#64748b;">Notas</th>
+            <th style="padding:8px 12px;text-align:center;font-size:.72rem;font-weight:700;text-transform:uppercase;color:#64748b;">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${items.map(h => {
+            const pct = h.monto > 0 && h.aprobado > 0 ? Math.round(h.aprobado / h.monto * 100) : null;
+            return `<tr style="border-bottom:1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+              <td style="padding:9px 12px;font-weight:600;font-size:.85rem;">${h.procedimiento}</td>
+              <td style="padding:9px 12px;font-family:monospace;font-size:.78rem;color:#64748b;">${h.cpt||'—'}${h.cie?' / '+h.cie:''}</td>
+              <td style="padding:9px 12px;text-align:right;font-weight:700;color:var(--teal);">RD$ ${fmt(h.monto||0)}</td>
+              <td style="padding:9px 12px;text-align:center;">
+                <span style="background:${(h.cobertura||0)>=80?'#dcfce7':'#fef3c7'};color:${(h.cobertura||0)>=80?'#166534':'#92400e'};border-radius:20px;padding:2px 8px;font-size:.78rem;font-weight:700;">${h.cobertura||0}%</span>
+              </td>
+              <td style="padding:9px 12px;text-align:right;">
+                ${h.aprobado ? `<span style="font-weight:700;color:#15803d;">RD$ ${fmt(h.aprobado)}</span>
+                ${pct ? `<div style="font-size:.72rem;color:#94a3b8;">${pct}% del solicitado</div>` : ''}` : '<span style="color:#94a3b8;">—</span>'}
+              </td>
+              <td style="padding:9px 12px;text-align:center;font-size:.82rem;color:#64748b;">${h.dias||'—'}</td>
+              <td style="padding:9px 12px;font-size:.78rem;color:#64748b;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${h.notas||''}">${h.notas||'—'}</td>
+              <td style="padding:9px 12px;text-align:center;white-space:nowrap;">
+                <button onclick="_honEditar('${h.id}')" style="background:none;border:1px solid var(--border);border-radius:4px;padding:3px 7px;cursor:pointer;font-size:12px;margin-right:4px;">✏️</button>
+                <button onclick="_honEliminar('${h.id}')" style="background:#fee2e2;color:#b91c1c;border:none;border-radius:4px;padding:3px 7px;cursor:pointer;font-size:12px;">🗑</button>
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+        <tfoot>
+          <tr style="background:#f8fafc;font-weight:700;border-top:2px solid var(--border);">
+            <td colspan="2" style="padding:8px 12px;font-size:.82rem;">TOTAL ${ars}</td>
+            <td style="padding:8px 12px;text-align:right;color:var(--teal);">RD$ ${fmt(totalSolicitado)}</td>
+            <td></td>
+            <td style="padding:8px 12px;text-align:right;color:#15803d;">RD$ ${fmt(totalAprobado)}</td>
+            <td colspan="3" style="padding:8px 12px;text-align:right;color:#64748b;font-size:.78rem;">Recuperación: ${pctRec}%</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>`;
+  });
+
+  container.innerHTML = `<div style="padding:16px;">${html}</div>`;
+}
+
+function _honAbrirModal(id) {
+  document.getElementById('honEditId').value = id || '';
+  document.getElementById('tituloModalHon').textContent = id ? '✏️ Editar Honorario' : '💲 Nuevo Honorario';
+
+  // Poblar select ARS
+  const arsEl = document.getElementById('honArs');
+  const aseguradoras = LS.get('mc_aseguradoras');
+  arsEl.innerHTML = '<option value="">— Seleccionar ARS —</option>' +
+    aseguradoras.map(a => `<option value="${a.nombre}">${a.nombre}</option>`).join('');
+
+  if (id) {
+    const h = LS.get('mc_honorarios', []).find(x => x.id === id);
+    if (h) {
+      arsEl.value         = h.ars || '';
+      document.getElementById('honProc').value     = h.procedimiento || '';
+      document.getElementById('honCpt').value      = h.cpt || '';
+      document.getElementById('honCie').value      = h.cie || '';
+      document.getElementById('honMonto').value    = h.monto || '';
+      document.getElementById('honCob').value      = h.cobertura || '';
+      document.getElementById('honAprobado').value = h.aprobado || '';
+      document.getElementById('honDias').value     = h.dias || '';
+      document.getElementById('honNotas').value    = h.notas || '';
+    }
+  } else {
+    document.querySelectorAll('#modalHonorario input, #modalHonorario textarea').forEach(el => el.value = '');
+    // Pre-seleccionar ARS activa si hay una
+    if (asegSelId) {
+      const aseg = aseguradoras.find(a => a.id === asegSelId);
+      if (aseg) arsEl.value = aseg.nombre;
+    }
+  }
+
+  document.getElementById('modalHonorario').classList.add('open');
+}
+
+function _honGuardar() {
+  const ars  = document.getElementById('honArs').value;
+  const proc = document.getElementById('honProc').value.trim();
+  if (!ars || !proc) { alert('Aseguradora y procedimiento son requeridos.'); return; }
+
+  const hons = LS.get('mc_honorarios', []);
+  const editId = document.getElementById('honEditId').value;
+
+  const datos = {
+    ars,
+    procedimiento: proc,
+    cpt:       document.getElementById('honCpt').value.trim(),
+    cie:       document.getElementById('honCie').value.trim(),
+    monto:     parseFloat(document.getElementById('honMonto').value) || 0,
+    cobertura: parseFloat(document.getElementById('honCob').value) || 0,
+    aprobado:  parseFloat(document.getElementById('honAprobado').value) || 0,
+    dias:      parseInt(document.getElementById('honDias').value) || null,
+    notas:     document.getElementById('honNotas').value.trim(),
+  };
+
+  if (editId) {
+    const idx = hons.findIndex(h => h.id === editId);
+    if (idx >= 0) hons[idx] = { ...hons[idx], ...datos };
+  } else {
+    hons.push({ id: `HON-${Date.now()}`, ...datos, creado: fecha() });
+  }
+
+  LS.set('mc_honorarios', hons);
+  cerrarModal('modalHonorario');
+
+  // Refrescar filtros de procedimiento
+  const procEl = document.getElementById('hon-filtro-proc');
+  if (procEl) {
+    while (procEl.options.length > 1) procEl.remove(1);
+  }
+  _honRender();
+}
+
+function _honEditar(id) { _honAbrirModal(id); }
+
+function _honEliminar(id) {
+  if (!confirm('¿Eliminar este honorario?')) return;
+  LS.set('mc_honorarios', LS.get('mc_honorarios', []).filter(h => h.id !== id));
+  _honRender();
+}
+
+function _honImprimir() {
+  const hons = LS.get('mc_honorarios', []);
+  const arsF  = document.getElementById('hon-filtro-ars')?.value || '';
+  const data  = arsF ? hons.filter(h => h.ars === arsF) : hons;
+
+  if (!data.length) { alert('No hay tarifas para imprimir.'); return; }
+
+  const byArs = {};
+  data.forEach(h => { if (!byArs[h.ars]) byArs[h.ars] = []; byArs[h.ars].push(h); });
+
+  const hoy = new Date().toLocaleDateString('es-DO', {day:'2-digit', month:'long', year:'numeric'});
+  let tablas = '';
+  Object.entries(byArs).forEach(([ars, items]) => {
+    tablas += `<h3 style="color:#1B3A5C;border-bottom:2px solid #1B3A5C;padding-bottom:6px;margin-top:20px;">🏥 ${ars}</h3>
+    <table style="width:100%;border-collapse:collapse;font-size:10pt;margin-bottom:16px;">
+      <thead><tr style="background:#1B3A5C;color:white;">
+        <th style="padding:7px 10px;text-align:left;">Procedimiento</th>
+        <th style="padding:7px 10px;text-align:left;">CPT / CIE-10</th>
+        <th style="padding:7px 10px;text-align:right;">Honorario</th>
+        <th style="padding:7px 10px;text-align:center;">Cob. %</th>
+        <th style="padding:7px 10px;text-align:right;">Aprobado hist.</th>
+        <th style="padding:7px 10px;text-align:left;">Notas</th>
+      </tr></thead>
+      <tbody>${items.map((h,i) => `<tr style="background:${i%2?'#f9fbfb':'white'};border-bottom:1px solid #e2e8f0;">
+        <td style="padding:6px 10px;font-weight:600;">${h.procedimiento}</td>
+        <td style="padding:6px 10px;font-family:monospace;font-size:9pt;color:#475569;">${h.cpt||'—'}${h.cie?' / '+h.cie:''}</td>
+        <td style="padding:6px 10px;text-align:right;font-weight:700;color:#0E7C7B;">RD$ ${fmt(h.monto||0)}</td>
+        <td style="padding:6px 10px;text-align:center;">${h.cobertura||0}%</td>
+        <td style="padding:6px 10px;text-align:right;color:#166534;">${h.aprobado ? 'RD$ '+fmt(h.aprobado) : '—'}</td>
+        <td style="padding:6px 10px;font-size:9pt;color:#475569;">${h.notas||'—'}</td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+  });
+
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+    <title>Tarifa de Honorarios${arsF ? ' — '+arsF : ''}</title>
+    <style>body{font-family:'Times New Roman',serif;padding:30px;color:#2C3E50;} @media print{body{padding:15px;}}</style>
+  </head><body>
+    <div style="border-bottom:3px solid #1B3A5C;padding-bottom:12px;margin-bottom:16px;">
+      <div style="font-size:14pt;font-weight:800;color:#1A2A4A;">Dr. Lorenzo Ernesto Otaño Santiago</div>
+      <div style="font-size:9pt;color:#2E9DD4;font-weight:600;">Cirujano Pediátrico · Neonatólogo · Laparoscopista</div>
+    </div>
+    <h2 style="color:#1B3A5C;text-align:center;margin-bottom:4px;">TARIFA DE HONORARIOS MÉDICOS</h2>
+    <p style="text-align:center;font-size:10pt;color:#64748b;">Vigente al ${hoy}${arsF ? ' · '+arsF : ''}</p>
+    ${tablas}
+    <p style="margin-top:24px;font-size:9pt;color:#64748b;border-top:1px solid #e2e8f0;padding-top:10px;">
+      Nota: Los montos indicados son los honorarios solicitados. Los montos aprobados históricos son de referencia y pueden variar según el caso clínico.
+    </p>
+  </body></html>`);
+  win.document.close();
+  setTimeout(() => win.print(), 400);
+}
+
+// ════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  // Modo embebido: oculta el header cuando carga dentro del iframe de index.html
+  if (new URLSearchParams(location.search).get('embed') === '1') {
+    const hdr = document.querySelector('header');
+    if (hdr) hdr.style.display = 'none';
+  } else {
+    if (typeof _refreshLogoInDOM !== 'undefined') {
+      _refreshLogoInDOM();
+    } else {
+      const hdrIcon = document.getElementById('hdr-icon');
+      if (hdrIcon && typeof LOGO_SVG_SMALL !== 'undefined') hdrIcon.innerHTML = LOGO_SVG_SMALL;
+    }
+  }
+  initData();
+  renderLista();
+  renderSolicitudes();
+  setTimeout(() => { renderDashboardGlobal(); _honRender(); }, 100);
+});
+</script>
+</body>
+</html>
