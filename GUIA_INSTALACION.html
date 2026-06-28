@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guía de Instalación — Sistema de Gestión Pediátrico</title>
+<style>
+  :root{--navy:#1B3A5C;--teal:#0E7C7B;--light:#EAF4F4;--green:#27AE60;--orange:#E67E22;--red:#E74C3C;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:#F0F4F8;color:#2C3E50;line-height:1.7;}
+  .container{max-width:900px;margin:0 auto;padding:40px 24px;}
+  .hero{background:linear-gradient(135deg,var(--navy) 0%,var(--teal) 100%);color:white;border-radius:16px;padding:40px;margin-bottom:32px;text-align:center;}
+  .hero h1{font-size:2rem;font-weight:800;margin-bottom:8px;}
+  .hero p{font-size:1.05rem;opacity:.9;}
+  .badge-row{display:flex;justify-content:center;gap:12px;margin-top:16px;flex-wrap:wrap;}
+  .badge{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);padding:6px 14px;border-radius:20px;font-size:.85rem;font-weight:600;}
+  .card{background:white;border-radius:14px;border:1px solid #D5E8E8;box-shadow:0 1px 8px rgba(0,0,0,.06);margin-bottom:20px;overflow:hidden;}
+  .card-header{background:var(--navy);color:white;padding:14px 20px;font-weight:700;font-size:1rem;display:flex;align-items:center;gap:10px;}
+  .card-body{padding:20px;}
+  h2{color:var(--navy);font-size:1.2rem;margin:20px 0 10px;display:flex;align-items:center;gap:8px;}
+  h3{color:var(--teal);font-size:1rem;margin:14px 0 6px;}
+  p{margin-bottom:10px;}
+  code{background:#EAF4F4;color:var(--teal);padding:2px 8px;border-radius:4px;font-family:monospace;font-size:.9em;}
+  pre{background:#1B3A5C;color:#E8F5F5;padding:16px;border-radius:8px;overflow-x:auto;margin:10px 0;font-size:.88rem;line-height:1.6;}
+  pre code{background:transparent;color:inherit;padding:0;}
+  .step{display:flex;gap:16px;margin-bottom:20px;}
+  .step-num{background:var(--teal);color:white;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1rem;flex-shrink:0;}
+  .step-content{flex:1;}
+  .step-title{font-weight:700;color:var(--navy);font-size:1rem;margin-bottom:4px;}
+  .alert{border-radius:10px;padding:14px 16px;margin:12px 0;display:flex;gap:12px;}
+  .alert-info{background:#EAF4F4;border-left:4px solid var(--teal);}
+  .alert-warn{background:#FEF3E2;border-left:4px solid var(--orange);}
+  .alert-success{background:#EAFAF1;border-left:4px solid var(--green);}
+  .alert-icon{font-size:1.3rem;flex-shrink:0;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .module-card{background:var(--light);border-radius:10px;padding:14px;border:1px solid #D5E8E8;}
+  .module-card .icon{font-size:1.8rem;margin-bottom:6px;}
+  .module-card .name{font-weight:700;color:var(--navy);font-size:.9rem;}
+  .module-card .desc{font-size:.78rem;color:#7F8C8D;margin-top:2px;}
+  .module-card a{color:var(--teal);text-decoration:none;font-size:.78rem;font-weight:600;}
+  table{width:100%;border-collapse:collapse;font-size:.88rem;margin:10px 0;}
+  thead th{text-align:left;padding:8px 12px;background:var(--light);color:var(--navy);font-weight:700;border-bottom:2px solid #D5E8E8;}
+  tbody td{padding:8px 12px;border-bottom:1px solid #EEE;}
+  tbody tr:last-child td{border-bottom:none;}
+  .print-btn{position:fixed;bottom:24px;right:24px;background:var(--teal);color:white;border:none;padding:12px 20px;border-radius:12px;font-size:.9rem;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(14,124,123,.3);}
+  @media(max-width:600px){.grid2{grid-template-columns:1fr;}}
+  @media print{.print-btn{display:none;}.hero{background:#1B3A5C !important;}}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="hero">
+    <h1>🏥 Sistema de Gestión<br>Consultorio Pediátrico</h1>
+    <p>Guía completa de instalación, configuración y uso</p>
+    <div class="badge-row">
+      <span class="badge">v1.0</span>
+      <span class="badge">FastAPI + PostgreSQL</span>
+      <span class="badge">HTML MVP</span>
+      <span class="badge">Docker Ready</span>
+    </div>
+  </div>
+
+  <!-- MÓDULOS -->
+  <div class="card">
+    <div class="card-header">📦 Módulos del Sistema</div>
+    <div class="card-body">
+      <div class="grid2">
+        <div class="module-card"><div class="icon">📊</div><div class="name">Dashboard Principal</div><div class="desc">KPIs, agenda del día, acceso rápido</div><a href="app/index.html">→ app/index.html</a></div>
+        <div class="module-card"><div class="icon">🗓️</div><div class="name">Agenda Visual</div><div class="desc">Calendario mes/semana/día con recordatorios</div><a href="app/agenda.html">→ app/agenda.html</a></div>
+        <div class="module-card"><div class="icon">💵</div><div class="name">Dashboard Financiero</div><div class="desc">Gráficas, ingresos, exportación CSV</div><a href="app/dashboard_financiero.html">→ app/dashboard_financiero.html</a></div>
+        <div class="module-card"><div class="icon">🏥</div><div class="name">Módulo Aseguradoras</div><div class="desc">Solicitudes, autorizaciones, cartas PDF</div><a href="app/aseguradoras.html">→ app/aseguradoras.html</a></div>
+        <div class="module-card"><div class="icon">📝</div><div class="name">Documentos Clínicos</div><div class="desc">8 tipos de documentos con impresión</div><a href="app/documentos.html">→ app/documentos.html</a></div>
+        <div class="module-card"><div class="icon">⚙️</div><div class="name">Backend API</div><div class="desc">FastAPI + PostgreSQL para producción</div><div style="font-size:.78rem;color:#7F8C8D;">backend/main.py</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPCIÓN A: Uso Inmediato -->
+  <div class="card">
+    <div class="card-header">🚀 Opción A — Uso Inmediato (Sin Instalación)</div>
+    <div class="card-body">
+      <div class="alert alert-success"><div class="alert-icon">✅</div><div>Esta es la forma más rápida. El MVP funciona directamente en el navegador, sin necesidad de instalar nada. Los datos se guardan localmente en el navegador.</div></div>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Abre el archivo principal</div>
+          <p>Haz doble clic en <code>app/index.html</code> para abrir el sistema en tu navegador.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Navega a los módulos avanzados</div>
+          <p>Desde el menú lateral, accede a Agenda Visual, Dashboard Financiero, Aseguradoras y Documentos Clínicos.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Comienza a registrar pacientes</div>
+          <p>Ve a <strong>Pacientes → Nuevo Paciente</strong> y completa el expediente.</p>
+        </div>
+      </div>
+      <div class="alert alert-warn"><div class="alert-icon">⚠️</div><div><strong>Limitación:</strong> Los datos se guardan en el navegador (localStorage). No se comparten entre computadoras. Para uso en red, usa la Opción B o C.</div></div>
+    </div>
+  </div>
+
+  <!-- OPCIÓN B: Backend Local -->
+  <div class="card">
+    <div class="card-header">🐍 Opción B — Backend Python Local (Red Local)</div>
+    <div class="card-body">
+      <p>Para usar el sistema en red local (múltiples computadoras) con base de datos centralizada.</p>
+
+      <h3>Requisitos previos</h3>
+      <table>
+        <thead><tr><th>Software</th><th>Versión</th><th>Descarga</th></tr></thead>
+        <tbody>
+          <tr><td>Python</td><td>3.10+</td><td>python.org</td></tr>
+          <tr><td>PostgreSQL</td><td>15 o 16</td><td>postgresql.org</td></tr>
+          <tr><td>Git (opcional)</td><td>Cualquiera</td><td>git-scm.com</td></tr>
+        </tbody>
+      </table>
+
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Crear la base de datos PostgreSQL</div>
+          <pre><code>psql -U postgres
+CREATE DATABASE consultorio_db;
+CREATE USER medico WITH PASSWORD 'tu_password_segura';
+GRANT ALL PRIVILEGES ON DATABASE consultorio_db TO medico;
+\q</code></pre>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Ejecutar el esquema SQL</div>
+          <pre><code>psql -U medico -d consultorio_db -f database/schema.sql</code></pre>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Configurar el archivo .env</div>
+          <pre><code>copy .env.example .env
+# Editar .env con tus datos</code></pre>
+          <p>O ejecutar el asistente de configuración:</p>
+          <pre><code>python setup.py</code></pre>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="step-title">Instalar dependencias e iniciar</div>
+          <pre><code>cd backend
+pip install -r requirements.txt
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload</code></pre>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <div class="step-title">Acceder al sistema</div>
+          <p>API Docs: <code>http://localhost:8000/docs</code></p>
+          <p>Frontend: Abrir <code>app/index.html</code> en el navegador</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPCIÓN C: Docker -->
+  <div class="card">
+    <div class="card-header">🐳 Opción C — Docker (Producción Completa)</div>
+    <div class="card-body">
+      <p>La opción más robusta: incluye base de datos, API, frontend y backups automáticos.</p>
+
+      <h3>Requisitos</h3>
+      <p>Instalar <strong>Docker Desktop</strong> desde <code>docker.com</code></p>
+
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Configurar variables de entorno</div>
+          <pre><code>copy .env.example .env
+# Editar .env con contraseñas seguras</code></pre>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Levantar todos los servicios</div>
+          <pre><code>docker-compose up -d</code></pre>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Acceder</div>
+          <table>
+            <thead><tr><th>Servicio</th><th>URL</th></tr></thead>
+            <tbody>
+              <tr><td>🌐 Sistema Web</td><td>http://localhost</td></tr>
+              <tr><td>⚙️ API Backend</td><td>http://localhost:8000/docs</td></tr>
+              <tr><td>🗄️ PgAdmin (BD)</td><td>http://localhost:5050</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="step-title">Comandos útiles</div>
+          <pre><code># Ver estado de los servicios
+docker-compose ps
+
+# Ver logs en tiempo real
+docker-compose logs -f backend
+
+# Detener el sistema
+docker-compose down
+
+# Backup manual de la BD
+docker-compose exec postgres pg_dump -U medico consultorio_db > backup.sql
+
+# Con PgAdmin (panel visual)
+docker-compose --profile admin up -d</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ESTRUCTURA DE ARCHIVOS -->
+  <div class="card">
+    <div class="card-header">📁 Estructura de Archivos</div>
+    <div class="card-body">
+      <pre><code>Gestion de Consultorio/
+├── app/                          ← Frontend HTML (abrir en navegador)
+│   ├── index.html                ← Dashboard principal ⭐
+│   ├── agenda.html               ← Calendario visual ⭐
+│   ├── dashboard_financiero.html ← Finanzas con gráficas ⭐
+│   ├── aseguradoras.html         ← Módulo aseguradoras ⭐
+│   └── documentos.html           ← Generador documentos ⭐
+├── backend/                      ← API Python/FastAPI
+│   ├── main.py                   ← Endpoints REST
+│   ├── pdf_generator.py          ← PDFs con ReportLab
+│   ├── requirements.txt          ← Dependencias Python
+│   └── Dockerfile                ← Imagen Docker
+├── database/
+│   └── schema.sql                ← Esquema PostgreSQL completo
+├── nginx/
+│   └── nginx.conf                ← Proxy para producción
+├── backups/                      ← Backups automáticos BD
+├── docker-compose.yml            ← Orquestación Docker
+├── .env.example                  ← Plantilla de configuración
+├── setup.py                      ← Asistente de instalación
+├── Plan_Maestro_Consultorio.html ← Documentación del proyecto
+└── GUIA_INSTALACION.html         ← Este archivo</code></pre>
+    </div>
+  </div>
+
+  <!-- PRIMEROS PASOS -->
+  <div class="card">
+    <div class="card-header">🎯 Primeros Pasos tras la Instalación</div>
+    <div class="card-body">
+      <div class="step"><div class="step-num">1</div><div class="step-content"><div class="step-title">Configurar datos del médico</div><p>En el archivo <code>.env</code>, actualiza <code>MEDICO_NOMBRE</code>, <code>MEDICO_ESPECIALIDAD</code>, <code>MEDICO_CEDULA</code> y <code>MEDICO_TEL</code>. Estos datos aparecen en todos los documentos impresos.</p></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-content"><div class="step-title">Registrar primeros pacientes</div><p>Ve a <strong>Pacientes → Nuevo Paciente</strong> y crea los expedientes. Puedes importar datos usando el módulo de reportes (CSV).</p></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-content"><div class="step-title">Configurar aseguradoras</div><p>En el módulo <strong>Aseguradoras ↗</strong>, edita los datos de contacto, teléfonos de autorización y procedimientos cubiertos de cada aseguradora.</p></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-content"><div class="step-title">Personalizar plantillas de documentos</div><p>En <strong>Documentos Clínicos ↗</strong>, verifica que las plantillas quirúrgicas reflejen tu práctica clínica. Puedes editar los textos directamente en el generador.</p></div></div>
+      <div class="step"><div class="step-num">5</div><div class="step-content"><div class="step-title">Programar citas</div><p>En <strong>Agenda Visual ↗</strong>, crea las citas del día. Las vistas mensual, semanal y diaria te permiten visualizar la agenda completa.</p></div></div>
+    </div>
+  </div>
+
+  <!-- SOPORTE -->
+  <div class="card">
+    <div class="card-header">🛟 Solución de Problemas Comunes</div>
+    <div class="card-body">
+      <h3>El archivo HTML no abre correctamente</h3>
+      <p>Asegúrate de abrir los archivos con un navegador moderno (Chrome, Edge o Firefox). Haz clic derecho → "Abrir con" → tu navegador.</p>
+      <h3>Los datos no se guardan entre sesiones</h3>
+      <p>El MVP usa localStorage del navegador. No borres el caché del navegador si quieres conservar los datos. Para datos persistentes usa la Opción B o C.</p>
+      <h3>Error de conexión a PostgreSQL</h3>
+      <p>Verifica que PostgreSQL esté corriendo: <code>pg_isready</code>. Confirma que el usuario y contraseña en <code>.env</code> sean correctos.</p>
+      <h3>Error al instalar WeasyPrint</h3>
+      <p>WeasyPrint requiere Cairo y Pango. En Windows, descarga las dependencias desde el sitio oficial de WeasyPrint o usa el Dockerfile que ya incluye todo.</p>
+      <h3>Docker no inicia</h3>
+      <p>Asegúrate de que Docker Desktop esté abierto y corriendo antes de ejecutar <code>docker-compose up</code>.</p>
+    </div>
+  </div>
+
+</div>
+<button class="print-btn" onclick="window.print()">🖨️ Imprimir Guía</button>
+</body>
+</html>

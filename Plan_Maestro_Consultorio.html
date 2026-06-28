@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plan Maestro — Sistema de Gestión Consultorio Médico Quirúrgico Pediátrico</title>
+<style>
+  :root {
+    --navy:   #1B3A5C;
+    --teal:   #0E7C7B;
+    --accent: #2E86AB;
+    --orange: #E8871A;
+    --light:  #EAF4F4;
+    --gray:   #F5F5F5;
+    --dark:   #2D2D2D;
+    --white:  #FFFFFF;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Arial', 'Helvetica Neue', sans-serif;
+    background: #ECEFF1;
+    color: var(--dark);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ─── Print styles ─────────────────────────────────── */
+  @media print {
+    body { background: white; }
+    .no-print { display: none !important; }
+    .page { box-shadow: none; margin: 0; border-radius: 0; page-break-after: always; }
+    .page:last-child { page-break-after: avoid; }
+  }
+
+  /* ─── Floating print button ────────────────────────── */
+  .print-btn {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: var(--teal);
+    color: white;
+    border: none;
+    padding: 14px 24px;
+    border-radius: 50px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0,0,0,.25);
+    z-index: 1000;
+    transition: background .2s;
+  }
+  .print-btn:hover { background: var(--navy); }
+
+  /* ─── Page wrapper ──────────────────────────────────── */
+  .page {
+    background: white;
+    width: 816px;
+    margin: 32px auto;
+    padding: 72px 80px;
+    box-shadow: 0 4px 24px rgba(0,0,0,.12);
+    border-radius: 4px;
+  }
+
+  /* ─── Cover page ────────────────────────────────────── */
+  .cover {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 900px;
+    text-align: center;
+    gap: 18px;
+  }
+  .cover-badge {
+    background: var(--light);
+    color: var(--teal);
+    padding: 8px 24px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: .5px;
+  }
+  .cover h1 {
+    font-size: 38px;
+    color: var(--navy);
+    font-weight: 900;
+    line-height: 1.15;
+  }
+  .cover h2 {
+    font-size: 22px;
+    color: var(--teal);
+    font-weight: 700;
+  }
+  .cover-divider {
+    width: 80px;
+    height: 5px;
+    background: var(--teal);
+    border-radius: 4px;
+  }
+  .cover-sub {
+    font-size: 16px;
+    color: var(--dark);
+  }
+  .cover-meta {
+    margin-top: 32px;
+    background: var(--gray);
+    border-radius: 8px;
+    padding: 20px 40px;
+    text-align: left;
+    min-width: 380px;
+  }
+  .cover-meta-row { display: flex; gap: 12px; padding: 6px 0; border-bottom: 1px solid #e0e0e0; }
+  .cover-meta-row:last-child { border-bottom: none; }
+  .cover-meta-label { font-weight: bold; color: var(--navy); min-width: 120px; }
+  .cover-footer { color: #999; font-size: 12px; font-style: italic; margin-top: 40px; }
+
+  /* ─── Header bar ────────────────────────────────────── */
+  .doc-header {
+    border-bottom: 3px solid var(--teal);
+    margin-bottom: 32px;
+    padding-bottom: 10px;
+    font-size: 12px;
+    color: #888;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* ─── TOC ───────────────────────────────────────────── */
+  .toc { margin: 24px 0; }
+  .toc h3 { color: var(--navy); font-size: 18px; margin-bottom: 16px; border-bottom: 2px solid var(--light); padding-bottom: 8px; }
+  .toc-item { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 0; border-bottom: 1px dotted #ccc; }
+  .toc-item a { color: var(--navy); text-decoration: none; font-weight: 600; font-size: 13px; }
+  .toc-item a:hover { color: var(--teal); }
+  .toc-page { color: #888; font-size: 12px; }
+  .toc-sub { padding-left: 24px; }
+  .toc-sub a { font-weight: 400; color: var(--dark); font-size: 12px; }
+
+  /* ─── Headings ──────────────────────────────────────── */
+  h1.section-title {
+    font-size: 28px;
+    color: var(--navy);
+    font-weight: 900;
+    margin-bottom: 8px;
+    padding-bottom: 10px;
+    border-bottom: 3px solid var(--teal);
+  }
+  h2.sub-title {
+    font-size: 18px;
+    color: var(--teal);
+    font-weight: 700;
+    margin: 28px 0 12px;
+  }
+  h3.mini-title {
+    font-size: 15px;
+    color: var(--accent);
+    font-weight: 700;
+    margin: 20px 0 8px;
+  }
+
+  /* ─── Prose ─────────────────────────────────────────── */
+  p.prose { margin: 12px 0; line-height: 1.7; text-align: justify; }
+
+  /* ─── Banner ────────────────────────────────────────── */
+  .banner {
+    padding: 14px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 15px;
+    margin: 20px 0;
+    color: white;
+  }
+  .banner-navy  { background: var(--navy); }
+  .banner-teal  { background: var(--teal); }
+  .banner-accent { background: var(--accent); }
+  .banner-orange { background: var(--orange); }
+  .banner-dark   { background: var(--dark); }
+
+  /* ─── Tables ────────────────────────────────────────── */
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+  thead tr { background: var(--navy); color: white; }
+  thead th { padding: 10px 12px; text-align: left; font-weight: 600; }
+  tbody tr:nth-child(even) { background: var(--gray); }
+  tbody tr:hover { background: var(--light); }
+  td { padding: 9px 12px; border-bottom: 1px solid #E0E0E0; vertical-align: top; }
+  td:first-child { font-weight: 600; color: var(--navy); }
+
+  .table-teal thead tr { background: var(--teal); }
+
+  /* DB table */
+  .db-table { margin: 20px 0 32px; }
+  .db-table-header { background: var(--navy); color: white; padding: 10px 14px; font-weight: bold; font-size: 14px; border-radius: 4px 4px 0 0; }
+  .db-table-sub-header { display: flex; background: var(--teal); color: white; font-weight: 600; font-size: 12px; }
+  .db-table-sub-header div { padding: 8px 12px; }
+  .db-row { display: flex; border-bottom: 1px solid #E0E0E0; font-size: 12px; }
+  .db-row:nth-child(even) { background: var(--gray); }
+  .db-row div { padding: 7px 12px; }
+  .db-field { width: 25%; font-weight: bold; color: var(--navy); font-family: monospace; font-size: 12px; }
+  .db-type  { width: 20%; color: #555; font-family: monospace; font-size: 11px; }
+  .db-desc  { width: 55%; color: var(--dark); }
+
+  /* ─── Lists ─────────────────────────────────────────── */
+  ul.custom { list-style: none; margin: 8px 0; padding: 0; }
+  ul.custom li { padding: 5px 0 5px 24px; position: relative; line-height: 1.5; }
+  ul.custom li::before { content: "•"; position: absolute; left: 6px; color: var(--teal); font-weight: bold; font-size: 16px; }
+
+  ol.custom { list-style: none; counter-reset: step; margin: 8px 0; padding: 0; }
+  ol.custom li { counter-increment: step; padding: 6px 0 6px 32px; position: relative; }
+  ol.custom li::before { content: counter(step) "."; position: absolute; left: 4px; color: var(--teal); font-weight: bold; }
+
+  /* ─── Module card ───────────────────────────────────── */
+  .module-card {
+    border-left: 5px solid var(--teal);
+    background: var(--light);
+    padding: 16px 20px;
+    border-radius: 0 8px 8px 0;
+    margin: 16px 0;
+  }
+  .module-card.orange { border-left-color: var(--orange); background: #FFF8F0; }
+  .module-card.navy   { border-left-color: var(--navy);   background: #EEF3F9; }
+  .module-card.accent { border-left-color: var(--accent); background: #EDF5FA; }
+
+  /* ─── Phase card ────────────────────────────────────── */
+  .phase {
+    border-radius: 8px;
+    padding: 18px 24px;
+    margin: 16px 0;
+    color: white;
+  }
+  .phase h3 { font-size: 16px; margin-bottom: 10px; }
+  .phase ul.custom li::before { color: rgba(255,255,255,.7); }
+  .phase ul.custom li { color: white; }
+  .phase-0 { background: var(--dark); }
+  .phase-1 { background: var(--navy); }
+  .phase-2 { background: var(--teal); }
+  .phase-3 { background: var(--accent); }
+  .phase-4 { background: var(--orange); }
+
+  /* ─── KPI boxes ─────────────────────────────────────── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 20px 0; }
+  .kpi-box {
+    background: var(--light);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+    border-top: 4px solid var(--teal);
+  }
+  .kpi-value { font-size: 22px; font-weight: 900; color: var(--navy); }
+  .kpi-label { font-size: 12px; color: #666; margin-top: 4px; }
+
+  /* ─── Spacer ────────────────────────────────────────── */
+  .spacer { height: 20px; }
+  .spacer-lg { height: 40px; }
+</style>
+</head>
+<body>
+
+<button class="print-btn no-print" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- COVER PAGE -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="cover">
+    <div class="cover-badge">DOCUMENTO CONFIDENCIAL — USO MÉDICO INTERNO</div>
+    <h1>Sistema de Gestión Integral<br>Consultorio Médico</h1>
+    <div class="cover-divider"></div>
+    <h2>CIRUGÍA PEDIÁTRICA</h2>
+    <p class="cover-sub">Arquitectura Completa • Base de Datos • Módulos • Automatización • Roadmap</p>
+
+    <div class="cover-meta">
+      <div class="cover-meta-row"><span class="cover-meta-label">Documento:</span><span>Plan Maestro Completo v1.0</span></div>
+      <div class="cover-meta-row"><span class="cover-meta-label">Fecha:</span><span>Mayo 2026</span></div>
+      <div class="cover-meta-row"><span class="cover-meta-label">Especialidad:</span><span>Cirugía Pediátrica</span></div>
+      <div class="cover-meta-row"><span class="cover-meta-label">Módulos:</span><span>10 módulos funcionales integrados</span></div>
+      <div class="cover-meta-row"><span class="cover-meta-label">Tecnología:</span><span>PostgreSQL + React + Python FastAPI</span></div>
+    </div>
+
+    <div class="kpi-grid" style="margin-top: 32px; max-width: 560px;">
+      <div class="kpi-box"><div class="kpi-value">&lt; 3 min</div><div class="kpi-label">Tiempo por consulta</div></div>
+      <div class="kpi-box"><div class="kpi-value">10</div><div class="kpi-label">Módulos clínicos</div></div>
+      <div class="kpi-box"><div class="kpi-value">70%</div><div class="kpi-label">Menos carga admin</div></div>
+    </div>
+    <p class="cover-footer">Plan diseñado con estándares internacionales EMR/EHR para cirugía pediátrica</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SECTION 1: RESUMEN EJECUTIVO -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="page" id="s1">
+  <div class="doc-header">
+    <span>Sistema de Gestión — Consultorio Médico Quirúrgico Pediátrico</span>
+    <span>Sección 1 — Resumen Ejecutivo</span>
+  </div>
+
+  <h1 class="section-title">1. RESUMEN EJECUTIVO</h1>
+  <p class="prose">El presente Plan Maestro define la arquitectura completa de un Sistema de Gestión Integral para un consultorio médico quirúrgico pediátrico. El sistema ha sido diseñado con base en estándares internacionales de Registros Médicos Electrónicos (EMR/EHR), priorizando la velocidad operativa, la automatización inteligente y la mínima carga administrativa para el médico.</p>
+
+  <h2 class="sub-title">1.1 Objetivos del Sistema</h2>
+  <ul class="custom">
+    <li>Centralizar el expediente clínico digital de cada paciente pediátrico</li>
+    <li>Automatizar la generación de documentos médicos (recetas, consentimientos, notas quirúrgicas)</li>
+    <li>Optimizar la agenda y el control de citas con recordatorios automáticos</li>
+    <li>Gestionar el módulo quirúrgico especializado con plantillas por procedimiento</li>
+    <li>Generar reportes financieros y estadísticas clínicas en tiempo real</li>
+    <li>Facilitar la comunicación con aseguradoras mediante cartas y solicitudes automatizadas</li>
+    <li>Garantizar la seguridad y confidencialidad de los datos médicos</li>
+  </ul>
+
+  <h2 class="sub-title">1.2 Indicadores de Éxito Esperados</h2>
+  <table>
+    <thead><tr><th>Indicador</th><th>Meta</th></tr></thead>
+    <tbody>
+      <tr><td>Tiempo de registro de una consulta</td><td>Menos de 3 minutos</td></tr>
+      <tr><td>Generación de receta médica</td><td>Menos de 1 minuto</td></tr>
+      <tr><td>Búsqueda de expediente</td><td>Menos de 5 segundos</td></tr>
+      <tr><td>Descripción quirúrgica automática</td><td>Menos de 5 minutos</td></tr>
+      <tr><td>Reducción de carga administrativa</td><td>70% vs. sistema en papel</td></tr>
+      <tr><td>Disponibilidad del sistema</td><td>99.5% uptime</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="sub-title">1.3 Visión General del Sistema</h2>
+  <p class="prose">El sistema cubre <strong>10 módulos funcionales integrados</strong>: Pacientes, Consultas, Recetas, Cirugías, Aseguradoras, Agenda, Administración Financiera, Seguridad, Automatización e Integraciones. Cada módulo opera de forma autónoma pero comparte una base de datos relacional centralizada, permitiendo trazabilidad completa de cada paciente desde su primer contacto hasta el seguimiento postquirúrgico.</p>
+
+  <div class="kpi-grid">
+    <div class="kpi-box"><div class="kpi-value">15</div><div class="kpi-label">Tablas relacionales</div></div>
+    <div class="kpi-box"><div class="kpi-value">4</div><div class="kpi-label">Fases de desarrollo</div></div>
+    <div class="kpi-box"><div class="kpi-value">11</div><div class="kpi-label">Documentos auto-generados</div></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SECTION 2: RECOMENDACION TECNOLOGICA -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="page" id="s2">
+  <div class="doc-header">
+    <span>Sistema de Gestión — Consultorio Médico Quirúrgico Pediátrico</span>
+    <span>Sección 2 — Tecnología</span>
+  </div>
+
+  <h1 class="section-title">2. RECOMENDACIÓN TECNOLÓGICA</h1>
+  <p class="prose">Tras evaluar las necesidades del consultorio — tamaño pequeño-mediano, foco en agilidad, mínima inversión en infraestructura, escalabilidad futura — se recomienda la siguiente arquitectura tecnológica:</p>
+
+  <div class="banner banner-navy">✅ RECOMENDACIÓN FINAL: Aplicación Web Local (PWA) + PostgreSQL + Python + React</div>
+
+  <h2 class="sub-title">2.1 Stack Tecnológico Recomendado</h2>
+  <table class="table-teal">
+    <thead><tr><th>Capa</th><th>Tecnología</th><th>Justificación</th></tr></thead>
+    <tbody>
+      <tr><td>Base de datos</td><td>PostgreSQL 16</td><td>Robusta, gratuita, relacional, soporte JSON avanzado</td></tr>
+      <tr><td>Backend / API</td><td>Python + FastAPI</td><td>Rápido, moderno, fácil de mantener, librería médica</td></tr>
+      <tr><td>Frontend / UI</td><td>React.js + TailwindCSS</td><td>Interfaz dinámica, responsiva, componentes reutilizables</td></tr>
+      <tr><td>Generación PDF</td><td>WeasyPrint + Jinja2</td><td>PDFs profesionales desde plantillas HTML</td></tr>
+      <tr><td>Autenticación</td><td>JWT + bcrypt</td><td>Seguro, estándar de industria</td></tr>
+      <tr><td>Respaldo</td><td>pg_dump + Google Drive</td><td>Respaldo automático cifrado en la nube</td></tr>
+      <tr><td>WhatsApp</td><td>Twilio / WhatsApp Business API</td><td>Recordatorios y envío de documentos</td></tr>
+      <tr><td>Email</td><td>SendGrid / Gmail SMTP</td><td>Envío de recetas y notificaciones</td></tr>
+      <tr><td>Despliegue</td><td>Docker + servidor local</td><td>Portátil, aislado, sin dependencias externas</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="sub-title">2.2 Por qué no otras opciones</h2>
+  <table>
+    <thead><tr><th>Opción descartada</th><th>Razón</th></tr></thead>
+    <tbody>
+      <tr><td>Microsoft Access</td><td>No escala, sin acceso multidispositivo, sin integración cloud</td></tr>
+      <tr><td>Excel puro</td><td>No relacional, sin automatización real, datos no seguros</td></tr>
+      <tr><td>Power Apps</td><td>Costoso, dependiente de licencias Microsoft 365</td></tr>
+      <tr><td>SQLite</td><td>No apto para acceso concurrente ni multidispositivo</td></tr>
+      <tr><td>EHR comercial genérico</td><td>No adaptado a cirugía pediátrica, costoso, rígido</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="sub-title">2.3 Infraestructura Mínima Recomendada</h2>
+  <ul class="custom">
+    <li>Computadora con Windows 10/11 o macOS (actúa como servidor local)</li>
+    <li>8 GB RAM mínimo — 16 GB recomendado para desempeño óptimo</li>
+    <li>SSD de 256 GB o más para base de datos y documentos PDF generados</li>
+    <li>Conexión a internet estable (para respaldo en nube y WhatsApp)</li>
+    <li>Router local para acceso desde tablet en el consultorio</li>
+    <li>Opcional: VPS (DigitalOcean ~$12/mes) para acceso remoto seguro desde fuera del consultorio</li>
+  </ul>
+
+  <h2 class="sub-title">2.4 Fases de Implementación Tecnológica</h2>
+  <table>
+    <thead><tr><th>Fase</th><th>Plazo</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td>Fase 0</td><td>Semanas 1-2</td><td>Configuración de ambiente, diseño final de BD</td></tr>
+      <tr><td>Fase 1 — MVP</td><td>Meses 1-3</td><td>Pacientes, consultas, recetas, agenda básica</td></tr>
+      <tr><td>Fase 2 — Quirúrgico</td><td>Meses 3-6</td><td>Cirugías, aseguradoras, dashboard financiero</td></tr>
+      <tr><td>Fase 3 — Comunicaciones</td><td>Meses 6-12</td><td>WhatsApp, email, reportes avanzados</td></tr>
+      <tr><td>Fase 4 — IA</td><td>Año 2+</td><td>Asistente IA, app móvil, integración aseguradoras</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SECTION 3: BASE DE DATOS -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="page" id="s3">
+  <div class="doc-header">
+    <span>Sistema de Gestión — Consultorio Médico Quirúrgico Pediátrico</span>
+    <span>Sección 3 — Base de Datos</span>
+  </div>
+
+  <h1 class="section-title">3. ARQUITECTURA DE BASE DE DATOS</h1>
+  <p class="prose">La base de datos está diseñada en modelo relacional con 15 tablas principales interconectadas. Cada tabla ha sido optimizada para velocidad de consulta y mínima redundancia de datos.</p>
+
+  <!-- pacientes -->
+  <div class="db-table">
+    <div class="db-table-header">📋 Tabla: pacientes</div>
+    <div class="db-table-sub-header">
+      <div class="db-field">Campo</div><div class="db-type">Tipo</div><div class="db-desc">Descripción</div>
+    </div>
+    <div class="db-row"><div class="db-field">id_paciente</div><div class="db-type">SERIAL PK</div><div class="db-desc">Identificador único automático del paciente</div></div>
+    <div class="db-row"><div class="db-field">nombre_completo</div><div class="db-type">VARCHAR(200)</div><div class="db-desc">Nombre y apellidos completos</div></div>
+    <div class="db-row"><div class="db-field">fecha_nacimiento</div><div class="db-type">DATE</div><div class="db-desc">Para cálculo automático de edad</div></div>
+    <div class="db-row"><div class="db-field">edad_calculada</div><div class="db-type">COMPUTED</div><div class="db-desc">Calculada en tiempo real desde fecha de nacimiento</div></div>
+    <div class="db-row"><div class="db-field">sexo</div><div class="db-type">CHAR(1)</div><div class="db-desc">M = Masculino / F = Femenino</div></div>
+    <div class="db-row"><div class="db-field">tutor_nombre</div><div class="db-type">VARCHAR(200)</div><div class="db-desc">Nombre del padre, madre o tutor legal</div></div>
+    <div class="db-row"><div class="db-field">telefono</div><div class="db-type">VARCHAR(20)</div><div class="db-desc">Teléfono principal de contacto</div></div>
+    <div class="db-row"><div class="db-field">seguro_medico</div><div class="db-type">VARCHAR(100)</div><div class="db-desc">Nombre de la compañía aseguradora</div></div>
+    <div class="db-row"><div class="db-field">numero_poliza</div><div class="db-type">VARCHAR(50)</div><div class="db-desc">Número de póliza del seguro médico</div></div>
+    <div class="db-row"><div class="db-field">foto_url</div><div class="db-type">VARCHAR(500)</div><div class="db-desc">Ruta a la fotografía del paciente</div></div>
+    <div class="db-row"><div class="db-field">fecha_registro</div><div class="db-type">TIMESTAMP</div><div class="db-desc">Fecha y hora de alta en el sistema</div></div>
+    <div class="db-row"><div class="db-field">activo</div><div class="db-type">BOOLEAN</div><div class="db-desc">Indica si el paciente está activo o archivado</div></div>
+  </div>
+
+  <!-- consultas -->
+  <div class="db-table">
+    <div class="db-table-header">🩺 Tabla: consultas</div>
+    <div class="db-table-sub-header">
+      <div class="db-field">Campo</div><div class="db-type">Tipo</div><div class="db-desc">Descripción</div>
+    </div>
+    <div class="db-row"><div class="db-field">id_consulta</div><div class="db-type">SERIAL PK</div><div class="db-desc">Identificador único de la consulta</div></div>
+    <div class="db-row"><div class="db-field">id_paciente</div><div class="db-type">INTEGER FK</div><div class="db-desc">Referencia al paciente en tabla pacientes</div></div>
+    <div class="db-row"><div class="db-field">fecha_consulta</div><div class="db-type">TIMESTAMP</div><div class="db-desc">Fecha y hora exacta de la consulta</div></div>
+    <div class="db-row"><div class="db-field">peso_kg</div><div class="db-type">DECIMAL(5,2)</div><div class="db-desc">Peso en kilogramos en esa visita</div></div>
+    <div class="db-row"><div class="db-field">talla_cm</div><div class="db-type">DECIMAL(5,2)</div><div class="db-desc">Talla en centímetros</div></div>
+    <div class="db-row"><div class="db-field">motivo_consulta</div><div class="db-type">TEXT</div><div class="db-desc">Motivo principal de la visita</div></div>
+    <div class="db-row"><div class="db-field">historia_actual</div><div class="db-type">TEXT</div><div class="db-desc">Anamnesis detallada del episodio</div></div>
+    <div class="db-row"><div class="db-field">examen_fisico</div><div class="db-type">TEXT</div><div class="db-desc">Hallazgos al examen físico completo</div></div>
+    <div class="db-row"><div class="db-field">diagnostico_cie10</div><div class="db-type">VARCHAR(10)</div><div class="db-desc">Código diagnóstico CIE-10</div></div>
+    <div class="db-row"><div class="db-field">plan_terapeutico</div><div class="db-type">TEXT</div><div class="db-desc">Tratamiento y conducta indicados</div></div>
+    <div class="db-row"><div class="db-field">proxima_cita</div><div class="db-type">DATE</div><div class="db-desc">Fecha sugerida de próxima visita</div></div>
+    <div class="db-row"><div class="db-field">firma_digital</div><div class="db-type">TEXT</div><div class="db-desc">Hash criptográfico de la firma del médico</div></div>
+  </div>
+</div>
+
+<div class="page" id="s3b">
+  <div class="doc-header">
+    <span>Sistema de Gestión — Consultorio Médico Quirúrgico Pediátrico</span>
+    <span>Sección 3 — Base de Datos (continuación)</span>
+  </div>
+
+  <!-- cirugias -->
+  <div class="db-table">
+    <div class="db-table-header">🔬 Tabla: cirugias</div>
+    <div class="db-table-sub-header">
+      <div class="db-field">Campo</div><div class="db-type">Tipo</div><div class="db-desc">Descripción</div>
+    </div>
+    <div class="db-row"><div class="db-field">id_cirugia</div><div class="db-type">SERIAL PK</div><div class="db-desc">Identificador único de la cirugía</div></div>
+    <div class="db-row"><div class="db-field">id_paciente</div><div class="db-type">INTEGER FK</div><div class="db-desc">Paciente operado</div></div>
+    <div class="db-row"><div class="db-field">fecha_cirugia</div><div class="db-type">DATE</div><div class="db-desc">Fecha del procedimiento quirúrgico</div></div>
+    <div class="db-row"><div class="db-field">procedimiento</div><div class="db-type">VARCHAR(200)</div><div class="db-desc">Nombre del procedimiento realizado</div></div>
+    <div class="db-row"><div class="db-field">diagnostico_quirurgico</div><div class="db-type">TEXT</div><div class="db-desc">Diagnóstico que motiva la intervención</div></div>
+    <div class="db-row"><div class="db-field">anestesia_tipo</div><div class="db-type">VARCHAR(50)</div><div class="db-desc">General / Regional / Local / Sedación</div></div>
+    <div class="db-row"><div class="db-field">anestesiologo</div><div class="db-type">VARCHAR(200)</div><div class="db-desc">Nombre del anestesiólogo</div></div>
+    <div class="db-row"><div class="db-field">descripcion_quirurgica</div><div class="db-type">TEXT</div><div class="db-desc">Descripción paso a paso del acto quirúrgico</div></div>
+    <div class="db-row"><div class="db-field">materiales_utilizados</div><div class="db-type">JSONB</div><div class="db-desc">Array de materiales e implantes utilizados</div></div>
+    <div class="db-row"><div class="db-field">hallazgos</div><div class="db-type">TEXT</div><div class="db-desc">Hallazgos intraoperatorios</div></div>
+    <div class="db-row"><div class="db-field">duracion_minutos</div><div class="db-type">INTEGER</div><div class="db-desc">Duración total del procedimiento</div></div>
+    <div class="db-row"><div class="db-field">estado</div><div class="db-type">VARCHAR(20)</div><div class="db-desc">Programada / Realizada / Postoperatorio</div></div>
+  </div>
+
+  <!-- recetas -->
+  <div class="db-table">
+    <div class="db-table-header">💊 Tabla: recetas</div>
+    <div class="db-table-sub-header">
+      <div class="db-field">Campo</div><div class="db-type">Tipo</div><div class="db-desc">Descripción</div>
+    </div>
+    <div class="db-row"><div class="db-field">id_receta</div><div class="db-type">SERIAL PK</div><div class="db-desc">Identificador único</div></div>
+    <div class="db-row"><div class="db-field">id_consulta</div><div class="db-type">INTEGER FK</div><div class="db-desc">Consulta a la que pertenece la receta</div></div>
+    <div class="db-row"><div class="db-field">id_paciente</div><div class="db-type">INTEGER FK</div><div class="db-desc">Paciente que recibe la receta</div></div>
+    <div class="db-row"><div class="db-field">medicamentos</div><div class="db-type">JSONB</div><div class="db-desc">Array de medicamentos con dosis, frecuencia y duración</div></div>
+    <div class="db-row"><div class="db-field">peso_para_calculo</div><div class="db-type">DECIMAL(5,2)</div><div class="db-desc">Peso usado para calcular dosis pediátrica</div></div>
+    <div class="db-row"><div class="db-field">pdf_url</div><div class="db-type">VARCHAR(500)</div><div class="db-desc">Ruta al PDF de la receta generado</div></div>
+    <div class="db-row"><div class="db-field">enviado_whatsapp</div><div class="db-type">BOOLEAN</div><div class="db-desc">Indica si fue enviado por WhatsApp</div></div>
+  </div>
+
+  <!-- pagos -->
+  <div class="db-table">
+    <div class="db-table-header">💰 Tabla: pagos</div>
+    <div class="db-table-sub-header">
+      <div class="db-field">Campo</div><div class="db-type">Tipo</div><div class="db-desc">Descripción</div>
+    </div>
+    <div class="db-row"><div class="db-field">id_pago</div><div class="db-type">SERIAL PK</div><div class="db-desc">Identificador único del pago</div></div>
+    <div class="db-row"><div class="db-field">id_paciente</div><div class="db-type">INTEGER FK</div><div class="db-desc">Paciente que realiza el pago</div></div>
+    <div class="db-row"><div class="db-field">concepto</div><div class="db-type">VARCHAR(200)</div><div class="db-desc">Descripción del servicio pagado</div></div>
+    <div class="db-row"><div class="db-field">monto</div><div class="db-type">DECIMAL(10,2)</div><div class="db-desc">Monto cobrado</div></div>
+    <div class="db-row"><div class="db-field">metodo_pago</div><div class="db-type">VARCHAR(50)</div><div class="db-desc">Efectivo / Tarjeta / Transferencia / Seguro</div></div>
+    <div class="db-row"><div class="db-field">aseguradora</div><div class="db-type">VARCHAR(100)</div><div class="db-desc">Nombre de aseguradora si aplica</div></div>
+    <div class="db-row"><div class="db-field">estado</div><div class="db-type">VARCHAR(20)</div><div class="db-desc">Pagado / Pendiente / Parcial</div></div>
+  </div>
+
+  <h2 class="sub-title">3.1 Tablas Adicionales del Sistema</h2>
+  <table>
+    <thead><tr><th>Tabla</th><th>Función</th></tr></thead>
+    <tbody>
+      <tr><td>historial_clinico</td><td>Antecedentes, alergias, medicamentos crónicos, vacunas</td></tr>
+      <tr><td>citas</td><td>Agenda y calendario con estados y recordatorios</td></tr>
+      <tr><td>usuarios</td><td>Control de acceso, roles y permisos del personal</td></tr>
+      <tr><td>medicamentos_catalogo</td><td>Fármacos con dosis pediátricas y presentaciones</td></tr>
+      <tr><td>procedimientos_plantillas</td><td>Plantillas quirúrgicas por tipo de procedimiento</td></tr>
+      <tr><td>aseguradoras</td><td>Catálogo de aseguradoras con datos de contacto</td></tr>
+      <tr><td>documentos</td><td>Registro de todos los PDFs generados y enviados</td></tr>
+      <tr><td>audit_log</td><td>Registro de acciones para trazabilidad y seguridad</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SECTION 4: MODULOS -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="page" id="s4">
+  <div class="doc-header">
+    <span>Sistema de Gestión — Consultorio Médico Quirúrgico Pediátrico</span>
+    <span>Sección 4 — Módulos del Sistema</span>
+  </div>
+
+  <h1 class="section-title">4. MÓDULOS DEL SISTEMA</h1>
+
+  <!-- MOD 1 -->
+  <div class="banner banner-navy">📋 MÓDULO 1: EXPEDIENTE DE PACIENTES</div>
+  <div class="module-card navy">
+    <p class="prose">El módulo central. Gestiona el expediente digital completo de cada paciente pediátrico con toda la información clínica, demográfica y administrativa.</p>
+    <h3 class="mini-title">Funcionalidades clave</h3>
+    <ul class="custom">
+      <li>Registro completo con foto, datos de tutor y seguro médico</li>
+      <li>Cálculo automático de edad desde la fecha de nacimiento</li>
+      <li>Historial clínico: antecedentes, alergias, cirugías previas</li>
+      <li>Gráficas de crecimiento con percentiles pediátricos (OMS)</li>
+      <li>Cronología clínica visual con todas las consultas y procedimientos</li>
+      <li>Búsqueda instantánea por nombre, expediente o teléfono</li>
+      <li>Alertas automáticas de alergias al abrir el expediente</li>
+    </ul>
+  </div>
+
+  <!-- MOD 2 -->
+  <div class="banner banner-teal">🩺 MÓDULO 2: CONSULTAS MÉDICAS</div>
+  <div class="module-card">
+    <p class="prose">Permite documentar consultas de forma ultra-rápida mediante plantillas inteligentes y autocompletado. Meta: completar en menos de 3 minutos.</p>
+    <h3 class="mini-title">Funcionalidades clave</h3>
+    <ul class="custom">
+      <li>Formulario estructurado: motivo, anamnesis, examen físico, diagnóstico, plan</li>
+      <li>Diagnósticos favoritos preconfigurados con códigos CIE-10</li>
+      <li>Frases médicas reutilizables por sección</li>
+      <li>Copia de consulta anterior como base editable</li>
+      <li>Generación automática de PDF con membrete profesional</li>
+      <li>Firma digital del médico integrada</li>
+      <li>Registro de peso y talla con cálculo de IMC</li>
+    </ul>
+  </div>
+
+  <!-- MOD 3 -->
+  <div class="banner banner-accent">💊 MÓDULO 3: RECETAS MÉDICAS</div>
+  <div class="module-card accent">
+    <p class="prose">Prescripción médica con cálculo automático de dosis pediátricas según peso. Genera recetas profesionales en PDF para imprimir o enviar.</p>
+    <h3 class="mini-title">Funcionalidades clave</h3>
+    <ul class="custom">
+      <li>Catálogo de medicamentos pediátricos frecuentes preconfigurado</li>
+      <li>Cálculo automático de dosis en mg/kg según peso actual</li>
+      <li>Alerta si el medicamento es alergia registrada</li>
+      <li>PDF con membrete institucional y QR de validación</li>
+      <li>Envío directo por WhatsApp o correo electrónico</li>
+      <li>Historial de recetas anteriores para consulta rápida</li>
+    </ul>
+  </div>
+
+  <!-- MOD 4 -->
+  <div class="banner banner-orange">🔬 MÓDULO 4: CIRUGÍA PEDIÁTRICA</div>
+  <div class="module-card orange">
+    <p class="prose">Módulo especializado para documentación quirúrgica completa. Cubre desde programación hasta seguimiento postoperatorio con generación automática de todos los documentos.</p>
+    <h3 class="mini-title">Funcionalidades clave</h3>
+    <ul class="custom">
+      <li>Programación quirúrgica con equipo, sala y tipo de anestesia</li>
+      <li>Plantillas por procedimiento (hernia inguinal, apendicectomía, fimosis, etc.)</li>
+      <li>Descripción quirúrgica semi-automática por selección de pasos</li>
+      <li>Generación automática de: consentimiento informado, nota preoperatoria</li>
+      <li>Generación automática de: descripción quirúrgica, nota postoperatoria, epicrisis</li>
+      <li>Indicaciones postoperatorias personalizadas por procedimiento</li>
+      <li>Seguimiento de evolución postoperatoria con fotografías clínicas</li>
+    </ul>
+  </div>
+</div>
+
+<div class="page" id="s4b">
+  <div class="doc-header">
+    <span>Sistema de Gestión — Consultorio Médico Quirúrgico Pediátrico</span>
+    <span>Sección 4 — Módulos (continuación)</span>
+  </div>
+
+  <!-- MOD 5 -->
+  <div class="banner banner-navy">📄 MÓDULO 5: ASEGURADORAS</div>
+  <div class="module-card navy">
+    <p class="prose">Automatiza la comunicación con aseguradoras mediante generación inteligente de cartas, solicitudes e informes clínicos.</p>
+    <ul class="custom">
+      <li>Plantillas por tipo de solicitud (quirúrgica, medicamentos, hospitalización)</li>
+      <li>Autocompletado con datos del paciente y diagnóstico</li>
+      <li>Inserción automática de códigos CIE-10 y CPT</li>
+      <li>Registro de solicitudes: enviadas, aprobadas, rechazadas</li>
+      <li>Envío directo por correo a los ajustadores</li>
+    </ul>
+  </div>
+
+  <!-- MOD 6 -->
+  <div class="banner banner-teal">📅 MÓDULO 6: AGENDA Y CITAS</div>
+  <div class="module-card">
+    <ul class="custom">
+      <li>Calendario semanal/mensual con vista de ocupación</li>
+      <li>Programación en 2 clics desde el expediente del paciente</li>
+      <li>Recordatorios automáticos por WhatsApp 24h y 1h antes</li>
+      <li>Confirmación de asistencia por WhatsApp</li>
+      <li>Bloqueo de horarios para cirugías y hospitalizaciones</li>
+      <li>Vista de pacientes pendientes de seguimiento postoperatorio</li>
+    </ul>
+  </div>
+
+  <!-- MOD 7 -->
+  <div class="banner banner-orange">💰 MÓDULO 7: ADMINISTRACIÓN FINANCIERA</div>
+  <div class="module-card orange">
+    <ul class="custom">
+      <li>Registro de pagos por consulta, cirugía o procedimiento</li>
+      <li>Control de cuentas pendientes y seguimiento de cobros</li>
+      <li>Dashboard financiero con ingresos diarios, semanales y mensuales</li>
+      <li>Comparativo mes a mes y análisis de tendencias</li>
+      <li>Reporte de productividad: consultas/día, ingresos por tipo de servicio</li>
+      <li>Exportación a Excel para contabilidad externa</li>
+    </ul>
+  </div>
+
+  <h2 class="sub-title">4.1 Documentos que Genera el Sistema Automáticamente</h2>
+  <table class="table-teal">
+    <thead><tr><th>Documento</th><th>Contenido automático</th><th>Formato</th></tr></thead>
+    <tbody>
+      <tr><td>Receta médica</td><td>Paciente, medicamentos, dosis calculadas</td><td>PDF imprimible</td></tr>
+      <tr><td>Consentimiento informado</td><td>Procedimiento, riesgos, firma digital</td><td>PDF con firma</td></tr>
+      <tr><td>Descripción quirúrgica</td><td>Técnica por procedimiento, hallazgos, equipo</td><td>PDF institucional</td></tr>
+      <tr><td>Nota preoperatoria</td><td>Diagnóstico, plan quirúrgico, riesgo ASA</td><td>PDF imprimible</td></tr>
+      <tr><td>Nota postoperatoria</td><td>Procedimiento, hemostasia, estado paciente</td><td>PDF institucional</td></tr>
+      <tr><td>Epicrisis</td><td>Resumen clínico completo del episodio</td><td>PDF para expediente</td></tr>
+      <tr><td>Indicaciones postop.</td><td>Cuidados específicos por procedimiento</td><td>PDF imprimible</td></tr>
+      <tr><td>Solicitud a aseguradora</td><td>Datos del paciente, diagnóstico, justificación</td><td>PDF con membrete</td></tr>
+      <tr><td>Certificado médico</td><td>Datos, diagnóstico, restricciones</td><td>PDF con firma</td></tr>
+      <tr><td>Carta de referencia</td><td>Datos del paciente, motivo, médico receptor</td><td>PDF institucional</td></tr>
+      <tr><td>Reporte financiero</td><td>Ingresos, gastos, productividad del período</td><td>PDF + Excel</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SECTION 5: AUTOMATIZACIÓN -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="page" id="s5">
+  <div class="doc-header">
+    <span>Sistema de Gestión — Consultorio Médico Quirúrgico Pediátrico</span>
+    <span>Sección 5 — Automatización e IA</span>
+  </div>
+
+  <h1 class="section-title">5. AUTOMATIZACIÓN E INTELIGENCIA ARTIFICIAL</h1>
+  <p class="prose">El sistema incorpora automatizaciones en cada nivel del flujo de trabajo clínico y administrativo, reduciendo al mínimo la digitación manual y los errores humanos.</p>
+
+  <h2 class="sub-title">5.1 Automatizaciones Clínicas</h2>
+  <ul class="custom">
+    <li>Autocompletado de diagnósticos CIE-10 con búsqueda en tiempo real</li>
+    <li>Sugerencia de plan terapéutico según diagnóstico seleccionado</li>
+    <li>Cálculo automático de dosis pediátricas según peso actual</li>
+    <li>Alerta instantánea si medicamento coincide con alergias registradas</li>
+    <li>Plantillas adaptativas que cambian según el motivo de consulta</li>
+    <li>Copia inteligente de consulta anterior con opción de editar diferencias</li>
+  </ul>
+
+  <h2 class="sub-title">5.2 Automatizaciones Administrativas</h2>
+  <ul class="custom">
+    <li>Recordatorios de cita por WhatsApp con mensaje personalizado del médico</li>
+    <li>Confirmación de asistencia y actualización automática del estado</li>
+    <li>Generación automática de recibo al registrar un pago</li>
+    <li>Alerta de cuentas pendientes de cobro con más de 30 días</li>
+    <li>Reporte financiero mensual generado automáticamente el día 1</li>
+    <li>Respaldo automático de la base de datos diariamente a las 2:00 AM</li>
+  </ul>
+
+  <h2 class="sub-title">5.3 Inteligencia Artificial — Fase 4 (Año 2+)</h2>
+  <ul class="custom">
+    <li>Asistente de IA para redacción de notas quirúrgicas por voz</li>
+    <li>Sugerencias diagnósticas basadas en síntomas y edad del paciente</li>
+    <li>Análisis predictivo de ausentismo y optimización de agenda</li>
+    <li>Transcripción de consultas a texto (reconocimiento de voz médico)</li>
+    <li>Generación automática de cartas a aseguradoras por IA</li>
+    <li>Detección de patrones clínicos para alertas preventivas</li>
+  </ul>
+
+  <h2 class="sub-title">5.4 Integraciones Externas</h2>
+  <table class="table-teal">
+    <thead><tr><th>Servicio</th><th>Función</th><th>Fase</th></tr></thead>
+    <tbody>
+      <tr><td>WhatsApp Business API</td><td>Recordatorios, confirmaciones y envío de recetas</td><td>Fase 3</td></tr>
+      <tr><td>Gmail / SendGrid</td><td>Envío de documentos y notificaciones al tutor</td><td>Fase 2</td></tr>
+      <tr><td>Google Drive</td><td>Respaldo automático cifrado de documentos y BD</td><td>Fase 1</td></tr>
+      <tr><td>Google Calendar</td><td>Sincronización bidireccional de agenda del médico</td><td>Fase 3</td></tr>
+      <tr><td>OpenAI / Claude API</td><td>Asistente de redacción clínica con IA</td><td>Fase 4</td></tr>
+      <tr><td>Aseguradoras API</td><td>Envío electrónico directo de solicitudes</td><td>Fase 4</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SECTION 6: UX/UI Y SEGURIDAD -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="page" id="s6">
+  <div class="doc-header">
+    <span>Sistema de Gestión — Consultorio Médico Quirúrgico Pediátrico</span>
+    <span>Sección 6-7 — UX/UI y Seguridad</span>
+  </div>
+
+  <h1 class="section-title">6. DISEÑO UX/UI</h1>
+  <p class="prose">La interfaz debe ser extremadamente intuitiva y rápida. El médico no debe necesitar capacitación extensa para usarla desde el primer día.</p>
+
+  <h2 class="sub-title">6.1 Principios de Diseño</h2>
+  <ul class="custom">
+    <li><strong>Pocos clics:</strong> ningún flujo crítico requiere más de 3 clics</li>
+    <li><strong>Botones grandes:</strong> accesibles para uso en tablet con stylus</li>
+    <li><strong>Colores médicos profesionales:</strong> azul marino, verde teal, blanco</li>
+    <li><strong>Modo oscuro:</strong> disponible para uso en espacios con luz reducida</li>
+    <li><strong>Diseño responsivo:</strong> computadora, tablet y smartphone</li>
+    <li><strong>Información crítica siempre visible:</strong> sin scroll innecesario</li>
+  </ul>
+
+  <h2 class="sub-title">6.2 Pantallas Principales</h2>
+  <table>
+    <thead><tr><th>Pantalla</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td>Dashboard principal</td><td>Agenda del día, alertas, estadísticas rápidas del consultorio</td></tr>
+      <tr><td>Búsqueda de pacientes</td><td>Búsqueda instantánea con autocompletado y foto</td></tr>
+      <tr><td>Expediente del paciente</td><td>Todas las fichas clínicas en pestañas organizadas</td></tr>
+      <tr><td>Nueva consulta</td><td>Formulario rápido con plantillas y autocompletado inteligente</td></tr>
+      <tr><td>Generador de recetas</td><td>Interfaz de selección de medicamentos con dosis calculadas</td></tr>
+      <tr><td>Módulo quirúrgico</td><td>Plantillas visuales por procedimiento con checkboxes</td></tr>
+      <tr><td>Agenda semanal</td><td>Calendario visual con drag-and-drop y estados de color</td></tr>
+      <tr><td>Dashboard financiero</td><td>Gráficas interactivas de ingresos, KPIs y tendencias</td></tr>
+    </tbody>
+  </table>
+
+  <h1 class="section-title" style="margin-top: 36px;">7. SEGURIDAD Y CONFIDENCIALIDAD</h1>
+  <p class="prose">Los datos médicos son información altamente sensible. El sistema implementa múltiples capas de seguridad para garantizar la confidencialidad y cumplir con normativas de privacidad médica.</p>
+
+  <h2 class="sub-title">7.1 Medidas de Seguridad</h2>
+  <ul class="custom">
+    <li>Autenticación con usuario y contraseña cifrada (bcrypt)</li>
+    <li>Tokens JWT con expiración automática cada 8 horas</li>
+    <li>Cifrado de datos sensibles en reposo (AES-256)</li>
+    <li>Conexiones HTTPS en todos los flujos de datos</li>
+    <li>Respaldo automático diario con retención de 30 días</li>
+    <li>Registro de auditoría: quién accedió, qué vio y cuándo</li>
+    <li>Borrado seguro con confirmación en dos pasos</li>
+  </ul>
+
+  <h2 class="sub-title">7.2 Roles del Sistema</h2>
+  <table>
+    <thead><tr><th>Rol</th><th>Permisos</th></tr></thead>
+    <tbody>
+      <tr><td>Médico Principal</td><td>Acceso total: leer, escribir, eliminar, configurar sistema</td></tr>
+      <tr><td>Asistente Médico</td><td>Agendar citas, registrar pagos, ver expedientes clínicos</td></tr>
+      <tr><td>Recepcionista</td><td>Solo agenda, cobros y vista básica de pacientes</td></tr>
+      <tr><td>Auditor / Contador</td><td>Solo módulo financiero, sin acceso a datos clínicos</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- SECTION 8: ROADMAP -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="page" id="s8">
+  <div class="doc-header">
+    <span>Sistema de Gestión — Consultorio Médico Quirúrgico Pediátrico</span>
+    <span>Sección 8 — Roadmap de Desarrollo</span>
+  </div>
+
+  <h1 class="section-title">8. ROADMAP DE DESARROLLO</h1>
+  <p class="prose">El sistema se desarrolla en 4 fases progresivas, permitiendo usar funcionalidades críticas desde la Fase 1 mientras se construyen las capacidades avanzadas.</p>
+
+  <div class="phase phase-0">
+    <h3>🚀 FASE 0 — INICIO INMEDIATO (Semanas 1-2)</h3>
+    <ul class="custom">
+      <li>Diseño final de la base de datos y validación de tablas</li>
+      <li>Configuración del ambiente de desarrollo (PostgreSQL + Python + React)</li>
+      <li>Migración de datos existentes al nuevo sistema</li>
+      <li>Creación de cuenta WhatsApp Business del consultorio</li>
+    </ul>
+  </div>
+
+  <div class="phase phase-1">
+    <h3>⚙️ FASE 1 — MVP BÁSICO (Meses 1-3)</h3>
+    <ul class="custom">
+      <li>Módulo de pacientes funcional con expediente completo</li>
+      <li>Consultas médicas con plantillas y generación de PDF</li>
+      <li>Recetas médicas con cálculo de dosis pediátrica</li>
+      <li>Agenda básica con calendario semanal</li>
+      <li>Registro de pagos y cobros simples</li>
+      <li>Autenticación y roles de usuario</li>
+    </ul>
+  </div>
+
+  <div class="phase phase-2">
+    <h3>🔬 FASE 2 — QUIRÚRGICO Y ASEGURADORAS (Meses 3-6)</h3>
+    <ul class="custom">
+      <li>Módulo quirúrgico con plantillas por procedimiento</li>
+      <li>Generación automática de todos los documentos quirúrgicos</li>
+      <li>Módulo de aseguradoras con cartas y solicitudes</li>
+      <li>Dashboard financiero con gráficas interactivas</li>
+      <li>Respaldo automático a Google Drive</li>
+    </ul>
+  </div>
+
+  <div class="phase phase-3">
+    <h3>📱 FASE 3 — COMUNICACIONES (Meses 6-12)</h3>
+    <ul class="custom">
+      <li>Integración completa con WhatsApp Business API</li>
+      <li>Envío de recetas y documentos por correo y WhatsApp</li>
+      <li>Recordatorios y confirmaciones automáticas</li>
+      <li>Estadísticas clínicas avanzadas y reportes financieros completos</li>
+    </ul>
+  </div>
+
+  <div class="phase phase-4">
+    <h3>🤖 FASE 4 — INTELIGENCIA ARTIFICIAL (Año 2+)</h3>
+    <ul class="custom">
+      <li>Asistente de IA para redacción de notas clínicas por voz</li>
+      <li>Sugerencias diagnósticas y alertas clínicas predictivas</li>
+      <li>App móvil para consulta remota del expediente</li>
+      <li>Integración con sistemas de aseguradoras vía API</li>
+    </ul>
+  </div>
+
+  <h2 class="sub-title">8.1 Estimación de Inversión</h2>
+  <table>
+    <thead><tr><th>Rubro</th><th>Estimación</th></tr></thead>
+    <tbody>
+      <tr><td>Desarrollo Fase 1 (freelancer)</td><td>$800 – $2,000 USD (inversión única)</td></tr>
+      <tr><td>Servidor VPS (opcional)</td><td>$12 – $25 USD/mes</td></tr>
+      <tr><td>WhatsApp Business API</td><td>$0 – $50 USD/mes según volumen</td></tr>
+      <tr><td>Dominio + certificado SSL</td><td>$15 USD/año</td></tr>
+      <tr><td>Google Workspace</td><td>$6 USD/mes</td></tr>
+      <tr><td>Mantenimiento mensual</td><td>$50 – $150 USD/mes</td></tr>
+      <tr><td><strong>Total estimado Fase 1</strong></td><td><strong>$900 – $2,200 USD inicial</strong></td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="sub-title">8.2 Próximos Pasos Recomendados</h2>
+  <ol class="custom">
+    <li>Validar y aprobar este Plan Maestro con el médico titular del consultorio</li>
+    <li>Definir el presupuesto para Fase 1 y cronograma de desarrollo</li>
+    <li>Seleccionar desarrollador con experiencia en sistemas médicos</li>
+    <li>Crear la base de datos según el esquema definido en la Sección 3</li>
+    <li>Iniciar migración de datos existentes (fichas en papel o Excel)</li>
+    <li>Desarrollar Módulo de Pacientes y Consultas como MVP inicial</li>
+    <li>Probar con casos reales y ajustar los formularios</li>
+    <li>Capacitar al personal asistente y recepcionista</li>
+    <li>Activar integración con WhatsApp para recordatorios</li>
+    <li>Revisar resultados y planificar Fase 2</li>
+  </ol>
+
+  <div class="spacer-lg"></div>
+  <div class="banner banner-teal" style="text-align: center; font-size: 16px;">
+    Sistema diseñado para operar con estándares internacionales EMR/EHR<br>
+    <span style="font-weight: normal; font-size: 13px; opacity: .85;">Este documento es vivo — actualizable en cada fase del proyecto</span>
+  </div>
+</div>
+
+</body>
+</html>
