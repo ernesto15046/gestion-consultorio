@@ -4,7 +4,7 @@
 // ══════════════════════════════════════════════════════════════
 
 const SUPABASE_URL  = 'https://cltipxpaudwztcdrjfzp.supabase.co';
-const SUPABASE_KEY  = 'TU_ANON_KEY_AQUI'; // ← se reemplaza cuando el usuario envíe la key
+const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsdGlweHBhdWR3enRjZHJqZnpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2NzI5MTYsImV4cCI6MjA5ODI0ODkxNn0.a1xd9DEYILyXCL9_onlNe5Y-V03IujznnreZ0uqMYDU';
 
 // ── Cliente Supabase (cargado desde CDN en cada HTML) ─────────
 let _sb = null;
