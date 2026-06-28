@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Configurar Imágenes — Dr. Otaño S.</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#EBF4FB;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:white;border-radius:16px;padding:32px 36px;max-width:600px;width:100%;box-shadow:0 4px 24px rgba(27,95,168,.14)}
+h1{color:#1B3585;font-size:1.35rem;margin-bottom:4px}
+.sub{color:#6B7280;font-size:.88rem;margin-bottom:28px;line-height:1.5}
+.bloque{border:2px dashed #2E9DD4;border-radius:12px;padding:20px;margin-bottom:18px}
+.bloque h2{font-size:.95rem;color:#1B3585;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.drop-zone{border:2px dashed #CBD5E0;border-radius:8px;padding:22px 16px;text-align:center;cursor:pointer;background:#F7FAFC;transition:.2s}
+.drop-zone:hover,.drop-zone.over{border-color:#1B3585;background:#EBF4FB}
+.drop-zone p{color:#9CA3AF;font-size:.82rem;margin-top:4px}
+input[type=file]{display:none}
+.btn-sel{background:#1B3585;color:white;border:none;border-radius:7px;padding:8px 18px;font-size:.88rem;cursor:pointer;margin-bottom:4px}
+.btn-sel:hover{background:#2E9DD4}
+.prev{margin-top:12px;display:none;text-align:center}
+.prev img{max-height:80px;max-width:100%;border-radius:6px;border:1px solid #E2E8F0}
+.badge{display:inline-block;font-size:.78rem;padding:4px 10px;border-radius:20px;margin-top:8px;font-weight:600}
+.badge.ok{background:#D1FAE5;color:#065F46}
+.badge.pend{background:#FEF3C7;color:#92400E}
+.btn-save{width:100%;padding:15px;background:#27AE60;color:white;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;margin-top:8px;transition:.2s}
+.btn-save:hover:not(:disabled){background:#219150}
+.btn-save:disabled{background:#9CA3AF;cursor:not-allowed}
+.exito{display:none;margin-top:20px;background:#D1FAE5;border-radius:10px;padding:20px;text-align:center}
+.exito h3{color:#065F46;margin-bottom:8px}
+.exito p{color:#374151;font-size:.88rem}
+.link-sistema{display:inline-block;margin-top:14px;background:#1B3585;color:white;padding:11px 24px;border-radius:8px;text-decoration:none;font-weight:700}
+</style>
+</head>
+<body>
+<div class="card">
+
+  <h1>🖼️ Configurar Logo y Firma</h1>
+  <p class="sub">Selecciona los archivos PNG desde tu computadora. El sistema los guardará internamente y los usará en todos los documentos y recetas automáticamente.</p>
+
+  <!-- ── LOGO ── -->
+  <div class="bloque">
+    <h2>📌 Logo del Consultorio</h2>
+    <div class="drop-zone" id="dz-logo" onclick="document.getElementById('f-logo').click()"
+         ondragover="dzOver(event,'dz-logo')" ondragleave="dzOut('dz-logo')" ondrop="dzDrop(event,'f-logo','dz-logo')">
+      <button class="btn-sel" type="button">Seleccionar logo.png</button>
+      <p>o arrastra el archivo aquí</p>
+    </div>
+    <input type="file" id="f-logo" accept="image/*" onchange="leer(this,'prev-logo','logo')">
+    <div class="prev" id="prev-logo">
+      <img id="img-logo" src="" alt="Logo">
+      <br><span class="badge ok">✅ Logo cargado</span>
+    </div>
+  </div>
+
+  <!-- ── FIRMA ── -->
+  <div class="bloque">
+    <h2>✍️ Firma y Sello</h2>
+    <div class="drop-zone" id="dz-firma" onclick="document.getElementById('f-firma').click()"
+         ondragover="dzOver(event,'dz-firma')" ondragleave="dzOut('dz-firma')" ondrop="dzDrop(event,'f-firma','dz-firma')">
+      <button class="btn-sel" type="button">Seleccionar firma.png</button>
+      <p>o arrastra el archivo aquí</p>
+    </div>
+    <input type="file" id="f-firma" accept="image/*" onchange="leer(this,'prev-firma','firma')">
+    <div class="prev" id="prev-firma">
+      <img id="img-firma" src="" alt="Firma">
+      <br><span class="badge ok">✅ Firma cargada</span>
+    </div>
+  </div>
+
+  <button class="btn-save" id="btn-save" onclick="guardar()" disabled>
+    ✅ Guardar en el sistema
+  </button>
+
+  <div class="exito" id="exito">
+    <h3>✅ ¡Listo! Imágenes guardadas correctamente</h3>
+    <p>El logo y la firma están activos en todos los módulos del sistema.<br>
+       Aparecerán en recetas, documentos, consentimientos y tarjetas de cita.</p>
+    <a href="index.html" class="link-sistema">Abrir el Sistema →</a>
+  </div>
+
+</div>
+<script>
+var data = { logo: null, firma: null };
+
+function leer(input, prevId, clave) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    data[clave] = e.target.result;
+    var prev = document.getElementById(prevId);
+    prev.style.display = 'block';
+    document.getElementById('img-' + clave).src = e.target.result;
+    checkBtn();
+  };
+  reader.readAsDataURL(file);
+}
+
+function checkBtn() {
+  document.getElementById('btn-save').disabled = !(data.logo && data.firma);
+}
+
+function guardar() {
+  if (!data.logo || !data.firma) return;
+  try {
+    localStorage.setItem('mc_logo_png',  data.logo);
+    localStorage.setItem('mc_firma_png', data.firma);
+    document.getElementById('exito').style.display = 'block';
+    document.getElementById('btn-save').textContent = '✅ Guardado';
+    document.getElementById('btn-save').disabled = true;
+    window.scrollTo({ top: 9999, behavior: 'smooth' });
+  } catch(e) {
+    alert('Error al guardar: ' + e.message + '\nAsegúrate de abrir el archivo desde el navegador.');
+  }
+}
+
+/* Drag & Drop */
+function dzOver(e, id) { e.preventDefault(); document.getElementById(id).classList.add('over'); }
+function dzOut(id) { document.getElementById(id).classList.remove('over'); }
+function dzDrop(e, inputId, dzId) {
+  e.preventDefault();
+  dzOut(dzId);
+  var file = e.dataTransfer.files[0];
+  if (!file || !file.type.startsWith('image/')) return;
+  var input = document.getElementById(inputId);
+  // simular selección
+  var dt = new DataTransfer();
+  dt.items.add(file);
+  input.files = dt.files;
+  input.dispatchEvent(new Event('change'));
+}
+
+/* Verificar si ya hay imágenes guardadas */
+(function() {
+  try {
+    var logo  = localStorage.getItem('mc_logo_png');
+    var firma = localStorage.getItem('mc_firma_png');
+    if (logo) {
+      data.logo = logo;
+      var p = document.getElementById('prev-logo');
+      p.style.display = 'block';
+      document.getElementById('img-logo').src = logo;
+    }
+    if (firma) {
+      data.firma = firma;
+      var p2 = document.getElementById('prev-firma');
+      p2.style.display = 'block';
+      document.getElementById('img-firma').src = firma;
+    }
+    checkBtn();
+  } catch(e) {}
+})();
+</script>
+</body>
+</html>

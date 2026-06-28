@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Financiero — Consultorio Pediátrico</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --navy: #1B3A5C;
+    --teal: #0E7C7B;
+    --accent: #2E86AB;
+    --light: #EAF4F4;
+    --green: #27AE60;
+    --orange: #E67E22;
+    --red: #E74C3C;
+    --gray: #95A5A6;
+    --white: #FFFFFF;
+    --bg: #F0F4F8;
+    --card: #FFFFFF;
+    --border: #D5E8E8;
+    --text: #2C3E50;
+    --text-light: #7F8C8D;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--teal) 100%);
+    color: white; padding: 0 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px; box-shadow: 0 2px 12px rgba(0,0,0,.25);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; font-size: 1.1rem; font-weight: 700; }
+  .brand-icon { background: rgba(255,255,255,.2); border-radius: 10px; width: 38px; height: 38px;
+    display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+  .nav-links { display: flex; gap: 8px; }
+  .nav-links a {
+    color: rgba(255,255,255,.85); text-decoration: none; padding: 8px 14px;
+    border-radius: 8px; font-size: .88rem; transition: background .2s;
+  }
+  .nav-links a:hover, .nav-links a.active { background: rgba(255,255,255,.2); color: white; }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  .btn-back {
+    background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
+    color: white; padding: 7px 16px; border-radius: 8px; cursor: pointer;
+    font-size: .85rem; text-decoration: none; display: flex; align-items: center; gap: 6px;
+    transition: background .2s;
+  }
+  .btn-back:hover { background: rgba(255,255,255,.25); }
+
+  /* ── MAIN LAYOUT ── */
+  main { max-width: 1400px; margin: 0 auto; padding: 24px; }
+
+  /* ── CONTROLS ── */
+  .controls {
+    background: var(--card); border-radius: 14px; padding: 16px 20px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    box-shadow: 0 1px 8px rgba(0,0,0,.06); margin-bottom: 20px; border: 1px solid var(--border);
+  }
+  .controls label { font-size: .85rem; font-weight: 600; color: var(--navy); }
+  .controls select, .controls input[type="month"] {
+    border: 1.5px solid var(--border); border-radius: 8px; padding: 8px 12px;
+    font-size: .9rem; color: var(--text); background: var(--bg); cursor: pointer;
+    transition: border-color .2s;
+  }
+  .controls select:focus, .controls input:focus { outline: none; border-color: var(--teal); }
+  .btn-primary {
+    background: var(--teal); color: white; border: none; padding: 9px 20px;
+    border-radius: 8px; font-size: .88rem; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; gap: 6px; transition: background .2s;
+  }
+  .btn-primary:hover { background: var(--navy); }
+  .btn-export {
+    margin-left: auto; background: white; color: var(--teal); border: 1.5px solid var(--teal);
+    padding: 8px 18px; border-radius: 8px; font-size: .85rem; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all .2s;
+  }
+  .btn-export:hover { background: var(--teal); color: white; }
+
+  /* ── KPI CARDS ── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
+  .kpi-card {
+    background: var(--card); border-radius: 14px; padding: 20px;
+    box-shadow: 0 1px 8px rgba(0,0,0,.06); border: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 8px; position: relative; overflow: hidden;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,.1); }
+  .kpi-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  }
+  .kpi-card.green::before { background: var(--green); }
+  .kpi-card.teal::before { background: var(--teal); }
+  .kpi-card.orange::before { background: var(--orange); }
+  .kpi-card.navy::before { background: var(--navy); }
+  .kpi-card.red::before { background: var(--red); }
+  .kpi-card.accent::before { background: var(--accent); }
+  .kpi-icon { font-size: 2rem; }
+  .kpi-label { font-size: .8rem; font-weight: 600; color: var(--text-light); text-transform: uppercase; letter-spacing: .5px; }
+  .kpi-value { font-size: 1.7rem; font-weight: 800; color: var(--navy); line-height: 1; }
+  .kpi-sub { font-size: .8rem; color: var(--text-light); }
+  .kpi-trend { display: flex; align-items: center; gap: 4px; font-size: .8rem; font-weight: 600; }
+  .kpi-trend.up { color: var(--green); }
+  .kpi-trend.down { color: var(--red); }
+  .kpi-trend.neutral { color: var(--gray); }
+
+  /* ── CHART GRID ── */
+  .chart-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .chart-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .chart-card {
+    background: var(--card); border-radius: 14px; padding: 20px;
+    box-shadow: 0 1px 8px rgba(0,0,0,.06); border: 1px solid var(--border);
+  }
+  .chart-card h3 { font-size: .95rem; font-weight: 700; color: var(--navy); margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px; }
+  .chart-card h3 span.badge {
+    background: var(--light); color: var(--teal); font-size: .72rem; padding: 2px 8px;
+    border-radius: 20px; font-weight: 600;
+  }
+  canvas { max-height: 260px; }
+
+  /* ── TABLES ── */
+  .section-title { font-size: 1.05rem; font-weight: 700; color: var(--navy); margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px; }
+  .table-card {
+    background: var(--card); border-radius: 14px; padding: 20px;
+    box-shadow: 0 1px 8px rgba(0,0,0,.06); border: 1px solid var(--border); margin-bottom: 20px;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+  thead th {
+    text-align: left; padding: 10px 12px; font-size: .78rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .5px; color: var(--text-light);
+    border-bottom: 2px solid var(--border); background: var(--bg);
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--light); }
+  tbody td { padding: 11px 12px; }
+  .badge-status {
+    display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px;
+    border-radius: 20px; font-size: .75rem; font-weight: 600;
+  }
+  .badge-pagado { background: #D5F5E3; color: #1E8449; }
+  .badge-pendiente { background: #FDEBD0; color: #B7770D; }
+  .badge-parcial { background: #D6EAF8; color: #1A5276; }
+  .badge-anulado { background: #FADBD8; color: #922B21; }
+  .amount { font-weight: 700; font-family: monospace; font-size: .9rem; }
+  .amount.credit { color: var(--green); }
+  .amount.debit { color: var(--red); }
+
+  /* ── TABS ── */
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--card);
+    border-radius: 10px; padding: 5px; border: 1px solid var(--border); width: fit-content; }
+  .tab-btn {
+    padding: 9px 20px; border-radius: 8px; border: none; background: transparent;
+    font-size: .88rem; font-weight: 600; color: var(--text-light); cursor: pointer; transition: all .2s;
+  }
+  .tab-btn.active { background: var(--teal); color: white; }
+  .tab-btn:hover:not(.active) { background: var(--light); color: var(--navy); }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1000;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    opacity: 0; pointer-events: none; transition: opacity .25s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: white; border-radius: 16px; padding: 28px; max-width: 560px; width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3); transform: translateY(20px); transition: transform .25s;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .modal-title { font-size: 1.1rem; font-weight: 700; color: var(--navy); }
+  .modal-close { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--gray); line-height: 1; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: .85rem; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
+  .form-control {
+    width: 100%; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 12px;
+    font-size: .9rem; color: var(--text); transition: border-color .2s;
+  }
+  .form-control:focus { outline: none; border-color: var(--teal); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+  .btn-secondary {
+    background: white; color: var(--text); border: 1.5px solid var(--border);
+    padding: 9px 20px; border-radius: 8px; font-size: .88rem; cursor: pointer; font-weight: 600;
+  }
+  .btn-secondary:hover { border-color: var(--gray); }
+  .btn-danger {
+    background: var(--red); color: white; border: none;
+    padding: 9px 20px; border-radius: 8px; font-size: .88rem; cursor: pointer; font-weight: 600;
+  }
+
+  /* ── EMPTY STATE ── */
+  .empty-state { text-align: center; padding: 40px; color: var(--text-light); }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+  .empty-state p { font-size: .9rem; }
+
+  /* ── TOOLTIP ── */
+  .tooltip-wrap { position: relative; display: inline-block; }
+  .tooltip-wrap .tip {
+    position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%);
+    background: var(--navy); color: white; padding: 6px 10px; border-radius: 6px;
+    font-size: .75rem; white-space: nowrap; pointer-events: none;
+    opacity: 0; transition: opacity .2s;
+  }
+  .tooltip-wrap:hover .tip { opacity: 1; }
+
+  /* ── PRINT ── */
+  @media print {
+    header, .controls, .tabs, .btn-export, .btn-back { display: none !important; }
+    .chart-card { break-inside: avoid; }
+    body { background: white; }
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .chart-grid { grid-template-columns: 1fr; }
+    .chart-grid-3 { grid-template-columns: 1fr; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .form-row { grid-template-columns: 1fr; }
+    .nav-links { display: none; }
+  }
+  @media (max-width: 500px) {
+    .kpi-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<script src="branding.js"></script>
+
+<!-- HEADER -->
+<header>
+  <div class="brand">
+    <div class="brand-icon" id="hdr-icon" style="background:transparent;padding:0;width:40px;height:40px;"></div>
+    <div class="brand-text" id="hdr-text">
+      <div style="font-size:.88rem;font-weight:800;">Dr. Lorenzo E. Otaño S.</div>
+      <div style="font-size:.68rem;opacity:.82;">Cirujano Pediátrico · Neonatólogo · Laparoscopista</div>
+    </div>
+  </div>
+  <nav class="nav-links">
+    <a href="index.html">Dashboard</a>
+    <a href="agenda.html">Agenda</a>
+    <a href="dashboard_financiero.html" class="active">Finanzas</a>
+    <a href="aseguradoras.html">Aseguradoras</a>
+    <a href="documentos.html">Documentos</a>
+  </nav>
+  <div class="header-right">
+    <a href="index.html" class="btn-back">← Sistema Principal</a>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <label>Período:</label>
+    <select id="selPeriod" onchange="cambiarPeriodo()">
+      <option value="mes">Este mes</option>
+      <option value="trimestre">Trimestre</option>
+      <option value="anio">Este año</option>
+      <option value="custom">Personalizado</option>
+    </select>
+    <div id="customRange" style="display:none; display:flex; gap:8px; align-items:center">
+      <input type="month" id="fechaDesde" />
+      <span>—</span>
+      <input type="month" id="fechaHasta" />
+    </div>
+    <button class="btn-primary" onclick="cargarDatos()">🔄 Actualizar</button>
+    <button class="btn-export" onclick="exportarCSV()">📊 Exportar CSV</button>
+    <button class="btn-export" onclick="window.print()">🖨️ Imprimir</button>
+    <button class="btn-primary" onclick="abrirModalPago()" style="margin-left:4px;">+ Registrar Pago</button>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="cambiarTab('resumen', this)">📈 Resumen</button>
+    <button class="tab-btn" onclick="cambiarTab('transacciones', this)">💳 Transacciones</button>
+    <button class="tab-btn" onclick="cambiarTab('produccion', this)">👨‍⚕️ Producción</button>
+    <button class="tab-btn" onclick="cambiarTab('pendientes', this)">⏳ Pendientes</button>
+  </div>
+
+  <!-- ═══════ TAB: RESUMEN ═══════ -->
+  <div id="tab-resumen" class="tab-pane active">
+
+    <!-- KPIs -->
+    <div class="kpi-grid" id="kpiGrid"></div>
+
+    <!-- CHARTS ROW 1 -->
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>📅 Ingresos por Día <span class="badge" id="badgeMes"></span></h3>
+        <canvas id="chartDiario"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>🔵 Distribución por Tipo</h3>
+        <canvas id="chartTipo"></canvas>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW 2 -->
+    <div class="chart-grid-3">
+      <div class="chart-card">
+        <h3>💊 Método de Pago</h3>
+        <canvas id="chartMetodo"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>🏥 Aseguradora</h3>
+        <canvas id="chartAseguradora"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>📆 Comparativo Mensual</h3>
+        <canvas id="chartMensual"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════ TAB: TRANSACCIONES ═══════ -->
+  <div id="tab-transacciones" class="tab-pane">
+    <div class="table-card">
+      <div class="section-title">
+        💳 Historial de Pagos
+        <button class="btn-primary" style="margin-left:auto; font-size:.8rem; padding:7px 14px;" onclick="abrirModalPago()">+ Nuevo Pago</button>
+      </div>
+      <div style="display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
+        <input type="text" class="form-control" id="buscarPago" placeholder="🔍 Buscar paciente, concepto..." style="max-width:280px; padding:8px 12px;" oninput="filtrarPagos()">
+        <select class="form-control" id="filtroEstado" style="max-width:180px;" onchange="filtrarPagos()">
+          <option value="">Todos los estados</option>
+          <option value="pagado">Pagado</option>
+          <option value="pendiente">Pendiente</option>
+          <option value="parcial">Parcial</option>
+          <option value="anulado">Anulado</option>
+        </select>
+      </div>
+      <div id="tablaPagos"></div>
+    </div>
+  </div>
+
+  <!-- ═══════ TAB: PRODUCCIÓN ═══════ -->
+  <div id="tab-produccion" class="tab-pane">
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>📊 Actividad Clínica por Semana</h3>
+        <canvas id="chartActividad"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>🔝 Diagnósticos Más Frecuentes</h3>
+        <canvas id="chartDiag"></canvas>
+      </div>
+    </div>
+    <div class="table-card">
+      <div class="section-title">🏆 Resumen de Producción Médica</div>
+      <div id="tablaProduccion"></div>
+    </div>
+  </div>
+
+  <!-- ═══════ TAB: PENDIENTES ═══════ -->
+  <div id="tab-pendientes" class="tab-pane">
+    <div class="table-card">
+      <div class="section-title">⏳ Pagos Pendientes / Parciales</div>
+      <div id="tablaPendientes"></div>
+    </div>
+    <div class="chart-grid" style="margin-top:20px;">
+      <div class="chart-card">
+        <h3>📊 Antigüedad de Cuentas por Cobrar</h3>
+        <canvas id="chartAntiguedad"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>🏥 Pendientes por Aseguradora</h3>
+        <canvas id="chartPendAseg"></canvas>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ═══════ MODAL: REGISTRAR PAGO ═══════ -->
+<div class="modal-overlay" id="modalPago">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">💰 Registrar Pago</span>
+      <button class="modal-close" onclick="cerrarModal('modalPago')">×</button>
+    </div>
+    <form id="formPago" onsubmit="guardarPago(event)">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Paciente *</label>
+          <select class="form-control" id="pagPaciente" required>
+            <option value="">Seleccionar...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Fecha *</label>
+          <input type="date" class="form-control" id="pagFecha" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Concepto *</label>
+        <select class="form-control" id="pagConcepto" required>
+          <option value="">Seleccionar...</option>
+          <option value="Consulta General">Consulta General</option>
+          <option value="Consulta de Seguimiento">Consulta de Seguimiento</option>
+          <option value="Consulta de Urgencia">Consulta de Urgencia</option>
+          <option value="Cirugía Mayor">Cirugía Mayor</option>
+          <option value="Cirugía Menor">Cirugía Menor</option>
+          <option value="Procedimiento Ambulatorio">Procedimiento Ambulatorio</option>
+          <option value="Honorarios Médicos">Honorarios Médicos</option>
+          <option value="Ultrasonido">Ultrasonido</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Monto Total *</label>
+          <input type="number" class="form-control" id="pagMonto" min="0" step="0.01" required placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label>Monto Pagado *</label>
+          <input type="number" class="form-control" id="pagPagado" min="0" step="0.01" required placeholder="0.00">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Método de Pago</label>
+          <select class="form-control" id="pagMetodo">
+            <option value="efectivo">Efectivo</option>
+            <option value="tarjeta_credito">Tarjeta Crédito</option>
+            <option value="tarjeta_debito">Tarjeta Débito</option>
+            <option value="transferencia">Transferencia</option>
+            <option value="seguro">Seguro Médico</option>
+            <option value="cheque">Cheque</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Aseguradora (si aplica)</label>
+          <select class="form-control" id="pagAseguradora">
+            <option value="">Ninguna / Particular</option>
+            <option value="APS">APS (65157)</option>
+            <option value="ASEMAP">ASEMAP (4457)</option>
+            <option value="Banco Central">Banco Central (2571)</option>
+            <option value="Banco de Reservas">Banco de Reservas (10006213)</option>
+            <option value="BMI Salud">BMI Salud (601080045)</option>
+            <option value="Constitución">Constitución (6379)</option>
+            <option value="CMD">CMD (9001-0915)</option>
+            <option value="Futuro">Futuro (13067)</option>
+            <option value="FF.AA.">FF.AA. (163548)</option>
+            <option value="GMA">GMA (10339)</option>
+            <option value="ARS Humano">ARS Humano (10889)</option>
+            <option value="Meta Salud">Meta Salud (6119)</option>
+            <option value="Monumental">Monumental (7045)</option>
+            <option value="MAPFRE SALUD">MAPFRE SALUD (8261835)</option>
+            <option value="Renacer">Renacer (6432)</option>
+            <option value="Salud Segura">Salud Segura (11083)</option>
+            <option value="SEMUNACED">SEMUNACED (228651)</option>
+            <option value="SENASA">SENASA (817151)</option>
+            <option value="SEMMA">SEMMA (11235)</option>
+            <option value="SIMAG">SIMAG (672812)</option>
+            <option value="UASD">UASD (2563)</option>
+            <option value="Universal">Universal (06052)</option>
+            <option value="ARS Yunén">ARS Yunén (12067)</option>
+            <option value="Otra">Otra</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>No. Factura / Referencia</label>
+        <input type="text" class="form-control" id="pagReferencia" placeholder="FAC-0001">
+      </div>
+      <div class="form-group">
+        <label>Notas</label>
+        <textarea class="form-control" id="pagNotas" rows="2" placeholder="Observaciones adicionales..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="cerrarModal('modalPago')">Cancelar</button>
+        <button type="submit" class="btn-primary">💾 Guardar Pago</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+//  STORAGE & DATA
+// ═══════════════════════════════════════
+const LS = {
+  get: (k, d=[]) => { try { return JSON.parse(localStorage.getItem(k)) || d; } catch { return d; } },
+  set: (k, v) => localStorage.setItem(k, JSON.stringify(v))
+};
+
+// Seed demo data if empty
+function initDemoData() {
+  if (LS.get('mc_pagos').length > 0) return;
+  const hoy = new Date();
+  const pagos = [];
+  const nombres = ['García Pérez, Ana', 'López Méndez, Carlos', 'Rodríguez Silva, María', 'Martínez Ruiz, Juan', 'González López, Laura', 'Hernández Cruz, Pedro', 'Flores Díaz, Sofia', 'Torres Vega, Miguel', 'Ramírez Luna, Isabel', 'Sánchez Torres, Diego'];
+  const conceptos = ['Consulta General', 'Consulta de Seguimiento', 'Cirugía Mayor', 'Cirugía Menor', 'Procedimiento Ambulatorio', 'Honorarios Médicos'];
+  const metodos = ['efectivo', 'tarjeta_credito', 'transferencia', 'seguro'];
+  const aseguradoras = ['', '', '', '', 'ARS Humano', 'Universal', 'SENASA', 'BMI Salud', 'ARS Yunén', 'Meta Salud', 'MAPFRE SALUD', 'Monumental', 'Futuro'];
+  const estados = ['pagado', 'pagado', 'pagado', 'pagado', 'pendiente', 'parcial'];
+
+  for (let i = 0; i < 80; i++) {
+    const fecha = new Date(hoy);
+    fecha.setDate(fecha.getDate() - Math.floor(Math.random() * 90));
+    const monto = [150, 200, 250, 300, 500, 800, 1200, 1500, 2000][Math.floor(Math.random()*9)];
+    const estado = estados[Math.floor(Math.random()*estados.length)];
+    const pagado = estado === 'pagado' ? monto : estado === 'parcial' ? Math.floor(monto * 0.5) : 0;
+    pagos.push({
+      id: 'PAG-' + String(i+1).padStart(4,'0'),
+      paciente: nombres[Math.floor(Math.random()*nombres.length)],
+      fecha: fecha.toISOString().split('T')[0],
+      concepto: conceptos[Math.floor(Math.random()*conceptos.length)],
+      monto, pagado,
+      metodo: metodos[Math.floor(Math.random()*metodos.length)],
+      aseguradora: aseguradoras[Math.floor(Math.random()*aseguradoras.length)],
+      estado,
+      referencia: 'FAC-' + String(i+1).padStart(4,'0'),
+      notas: ''
+    });
+  }
+  LS.set('mc_pagos', pagos);
+}
+
+// ═══════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════
+let charts = {};
+let allPagos = [];
+let filteredPagos = [];
+let periodoActual = 'mes';
+
+// ═══════════════════════════════════════
+//  PERIOD FILTER
+// ═══════════════════════════════════════
+function cambiarPeriodo() {
+  periodoActual = document.getElementById('selPeriod').value;
+  const customRange = document.getElementById('customRange');
+  customRange.style.display = periodoActual === 'custom' ? 'flex' : 'none';
+  if (periodoActual !== 'custom') cargarDatos();
+}
+
+function filtrarPorPeriodo(pagos) {
+  const hoy = new Date();
+  const ini = new Date();
+  if (periodoActual === 'mes') {
+    ini.setDate(1);
+  } else if (periodoActual === 'trimestre') {
+    ini.setMonth(ini.getMonth() - 2); ini.setDate(1);
+  } else if (periodoActual === 'anio') {
+    ini.setMonth(0); ini.setDate(1);
+  } else if (periodoActual === 'custom') {
+    const desde = document.getElementById('fechaDesde').value;
+    const hasta = document.getElementById('fechaHasta').value;
+    if (!desde || !hasta) return pagos;
+    return pagos.filter(p => p.fecha >= desde && p.fecha <= hasta + '-31');
+  }
+  const iniStr = ini.toISOString().split('T')[0];
+  return pagos.filter(p => p.fecha >= iniStr);
+}
+
+// ═══════════════════════════════════════
+//  LOAD & RENDER
+// ═══════════════════════════════════════
+function cargarDatos() {
+  allPagos = LS.get('mc_pagos');
+  filteredPagos = filtrarPorPeriodo(allPagos);
+  renderKPIs(filteredPagos);
+  renderCharts(filteredPagos, allPagos);
+  renderPagos();
+  renderPendientes(filteredPagos);
+  renderProduccion(filteredPagos);
+}
+
+// ═══════════════════════════════════════
+//  KPIs
+// ═══════════════════════════════════════
+function renderKPIs(pagos) {
+  const ingresos = pagos.filter(p => p.estado !== 'anulado').reduce((s, p) => s + (p.pagado || 0), 0);
+  const pendiente = pagos.filter(p => ['pendiente','parcial'].includes(p.estado)).reduce((s, p) => s + (p.monto - (p.pagado||0)), 0);
+  const cirugiasTotal = pagos.filter(p => p.concepto.includes('Cirugía')).reduce((s,p) => s + (p.pagado||0), 0);
+  const consultas = pagos.filter(p => p.concepto.includes('Consulta')).length;
+  const txCount = pagos.filter(p => p.estado !== 'anulado').length;
+  const promedio = txCount > 0 ? ingresos / txCount : 0;
+
+  // Compare with previous period
+  const prev = filtrarPeriodoAnterior(allPagos);
+  const ingAnt = prev.reduce((s,p) => s + (p.pagado||0), 0);
+  const pct = ingAnt > 0 ? ((ingresos - ingAnt) / ingAnt * 100).toFixed(1) : 0;
+  const trendDir = pct >= 0 ? 'up' : 'down';
+  const trendIcon = pct >= 0 ? '↑' : '↓';
+
+  document.getElementById('kpiGrid').innerHTML = `
+    <div class="kpi-card green">
+      <div class="kpi-icon">💵</div>
+      <div class="kpi-label">Ingresos Cobrados</div>
+      <div class="kpi-value">$${fmt(ingresos)}</div>
+      <div class="kpi-trend ${trendDir}">${trendIcon} ${Math.abs(pct)}% vs período anterior</div>
+    </div>
+    <div class="kpi-card orange">
+      <div class="kpi-icon">⏳</div>
+      <div class="kpi-label">Por Cobrar</div>
+      <div class="kpi-value">$${fmt(pendiente)}</div>
+      <div class="kpi-sub">${pagos.filter(p=>['pendiente','parcial'].includes(p.estado)).length} pagos pendientes</div>
+    </div>
+    <div class="kpi-card teal">
+      <div class="kpi-icon">🔪</div>
+      <div class="kpi-label">Ingresos Quirúrgicos</div>
+      <div class="kpi-value">$${fmt(cirugiasTotal)}</div>
+      <div class="kpi-sub">${pagos.filter(p=>p.concepto.includes('Cirugía')).length} cirugías</div>
+    </div>
+    <div class="kpi-card navy">
+      <div class="kpi-icon">👶</div>
+      <div class="kpi-label">Consultas</div>
+      <div class="kpi-value">${consultas}</div>
+      <div class="kpi-sub">en el período</div>
+    </div>
+    <div class="kpi-card accent">
+      <div class="kpi-icon">📊</div>
+      <div class="kpi-label">Ticket Promedio</div>
+      <div class="kpi-value">$${fmt(promedio)}</div>
+      <div class="kpi-sub">por transacción</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-icon">🏥</div>
+      <div class="kpi-label">Seguro Médico</div>
+      <div class="kpi-value">$${fmt(pagos.filter(p=>p.metodo==='seguro').reduce((s,p)=>s+(p.pagado||0),0))}</div>
+      <div class="kpi-sub">${pagos.filter(p=>p.metodo==='seguro').length} transacciones</div>
+    </div>
+  `;
+}
+
+function filtrarPeriodoAnterior(pagos) {
+  const hoy = new Date();
+  const ini = new Date(); const fin = new Date();
+  if (periodoActual === 'mes') {
+    fin.setDate(0); ini.setMonth(ini.getMonth()-1); ini.setDate(1);
+  } else if (periodoActual === 'trimestre') {
+    fin.setMonth(fin.getMonth()-2); fin.setDate(0);
+    ini.setMonth(ini.getMonth()-5); ini.setDate(1);
+  } else {
+    ini.setFullYear(ini.getFullYear()-1); ini.setMonth(0); ini.setDate(1);
+    fin.setFullYear(fin.getFullYear()-1); fin.setMonth(11); fin.setDate(31);
+  }
+  return pagos.filter(p => p.fecha >= ini.toISOString().split('T')[0] && p.fecha <= fin.toISOString().split('T')[0]);
+}
+
+function fmt(n) { return Number(n).toLocaleString('es-DO', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+
+// ═══════════════════════════════════════
+//  CHARTS
+// ═══════════════════════════════════════
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+const COLORS = ['#0E7C7B','#2E86AB','#1B3A5C','#27AE60','#E67E22','#9B59B6','#E74C3C','#F39C12'];
+
+function renderCharts(pagos, allPagos) {
+  renderChartDiario(pagos);
+  renderChartTipo(pagos);
+  renderChartMetodo(pagos);
+  renderChartAseguradora(pagos);
+  renderChartMensual(allPagos);
+  renderChartActividad(pagos);
+  renderChartDiag();
+  renderChartAntiguedad(pagos);
+  renderChartPendAseg(pagos);
+}
+
+function renderChartDiario(pagos) {
+  destroyChart('chartDiario');
+  // Group by day
+  const byDay = {};
+  pagos.forEach(p => { if (p.estado !== 'anulado') byDay[p.fecha] = (byDay[p.fecha]||0) + (p.pagado||0); });
+  const days = Object.keys(byDay).sort();
+  const vals = days.map(d => byDay[d]);
+  const now = new Date();
+  document.getElementById('badgeMes').textContent = now.toLocaleString('es-DO', {month:'long', year:'numeric'});
+  const ctx = document.getElementById('chartDiario').getContext('2d');
+  charts.chartDiario = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: days.map(d => {
+        const [y,m,dd] = d.split('-');
+        return `${dd}/${m}`;
+      }),
+      datasets: [{
+        label: 'Ingresos (RD$)',
+        data: vals,
+        backgroundColor: 'rgba(14,124,123,.7)',
+        borderColor: '#0E7C7B',
+        borderWidth: 1,
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: ctx => `RD$ ${fmt(ctx.raw)}` } }
+      },
+      scales: {
+        y: { beginAtZero: true, ticks: { callback: v => `$${(v/1000).toFixed(0)}K` }, grid: { color: '#EAF4F4' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+}
+
+function renderChartTipo(pagos) {
+  destroyChart('chartTipo');
+  const byTipo = {};
+  pagos.filter(p=>p.estado!=='anulado').forEach(p => {
+    byTipo[p.concepto] = (byTipo[p.concepto]||0) + (p.pagado||0);
+  });
+  const ctx = document.getElementById('chartTipo').getContext('2d');
+  charts.chartTipo = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(byTipo),
+      datasets: [{ data: Object.values(byTipo), backgroundColor: COLORS, borderWidth: 2 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12 } },
+        tooltip: { callbacks: { label: ctx => `$${fmt(ctx.raw)}` } }
+      }
+    }
+  });
+}
+
+function renderChartMetodo(pagos) {
+  destroyChart('chartMetodo');
+  const map = { efectivo:'Efectivo', tarjeta_credito:'T. Crédito', tarjeta_debito:'T. Débito', transferencia:'Transferencia', seguro:'Seguro', cheque:'Cheque' };
+  const byM = {};
+  pagos.filter(p=>p.estado!=='anulado').forEach(p => {
+    const k = map[p.metodo] || p.metodo;
+    byM[k] = (byM[k]||0) + (p.pagado||0);
+  });
+  const ctx = document.getElementById('chartMetodo').getContext('2d');
+  charts.chartMetodo = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: Object.keys(byM),
+      datasets: [{ data: Object.values(byM), backgroundColor: COLORS, borderWidth: 2 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { font:{size:10}, boxWidth:10 } },
+        tooltip: { callbacks: { label: ctx => `$${fmt(ctx.raw)}` } }
+      }
+    }
+  });
+}
+
+function renderChartAseguradora(pagos) {
+  destroyChart('chartAseguradora');
+  const byA = {};
+  pagos.filter(p=>p.estado!=='anulado'&&p.aseguradora).forEach(p => {
+    byA[p.aseguradora] = (byA[p.aseguradora]||0) + (p.pagado||0);
+  });
+  if (!Object.keys(byA).length) { return; }
+  const ctx = document.getElementById('chartAseguradora').getContext('2d');
+  charts.chartAseguradora = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(byA),
+      datasets: [{ label:'RD$', data:Object.values(byA), backgroundColor:COLORS, borderRadius:6 }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend:{display:false}, tooltip:{callbacks:{label:c=>`$${fmt(c.raw)}`}} },
+      scales: { x:{ticks:{callback:v=>`$${(v/1000).toFixed(0)}K`}}, y:{grid:{display:false}} }
+    }
+  });
+}
+
+function renderChartMensual(pagos) {
+  destroyChart('chartMensual');
+  const byM = {};
+  pagos.filter(p=>p.estado!=='anulado').forEach(p => {
+    const [y,m] = p.fecha.split('-');
+    const k = `${y}-${m}`;
+    byM[k] = (byM[k]||0) + (p.pagado||0);
+  });
+  const keys = Object.keys(byM).sort().slice(-12);
+  const ctx = document.getElementById('chartMensual').getContext('2d');
+  charts.chartMensual = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: keys.map(k => { const [y,m] = k.split('-'); return new Date(y,m-1,1).toLocaleString('es-DO',{month:'short'}); }),
+      datasets: [{ label:'Ingresos', data:keys.map(k=>byM[k]), borderColor:'#0E7C7B', backgroundColor:'rgba(14,124,123,.1)',
+        fill:true, tension:.4, pointRadius:4, pointBackgroundColor:'#0E7C7B' }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>`$${fmt(c.raw)}`}}},
+      scales:{y:{beginAtZero:true, ticks:{callback:v=>`$${(v/1000).toFixed(0)}K`}, grid:{color:'#EAF4F4'}}, x:{grid:{display:false}}}
+    }
+  });
+}
+
+function renderChartActividad(pagos) {
+  destroyChart('chartActividad');
+  // Group by week
+  const byW = {}; const byWCir = {};
+  pagos.forEach(p => {
+    const d = new Date(p.fecha);
+    const wk = `S${getWeek(d)}`;
+    if (p.concepto.includes('Consulta')) byW[wk] = (byW[wk]||0)+1;
+    if (p.concepto.includes('Cirugía')) byWCir[wk] = (byWCir[wk]||0)+1;
+  });
+  const weeks = [...new Set([...Object.keys(byW), ...Object.keys(byWCir)])].sort();
+  const ctx = document.getElementById('chartActividad').getContext('2d');
+  charts.chartActividad = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: weeks,
+      datasets: [
+        { label:'Consultas', data:weeks.map(w=>byW[w]||0), backgroundColor:'rgba(14,124,123,.7)', borderRadius:4 },
+        { label:'Cirugías', data:weeks.map(w=>byWCir[w]||0), backgroundColor:'rgba(27,58,92,.7)', borderRadius:4 }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}},
+      scales:{x:{stacked:false, grid:{display:false}}, y:{beginAtZero:true, grid:{color:'#EAF4F4'}}}
+    }
+  });
+}
+
+function getWeek(d) {
+  const onejan = new Date(d.getFullYear(),0,1);
+  return Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7);
+}
+
+function renderChartDiag() {
+  destroyChart('chartDiag');
+  const consultas = LS.get('mc_consultas');
+  const byD = {};
+  consultas.forEach(c => { if (c.diagnostico) byD[c.diagnostico] = (byD[c.diagnostico]||0)+1; });
+  const sorted = Object.entries(byD).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  if (!sorted.length) {
+    // Demo data
+    sorted.push(['Hernia Inguinal (K40)', 12], ['Apendicitis (K37)', 8], ['Fimosis (N47)', 7], ['Hidrocele (N43)', 5], ['Infección Urinaria (N39)', 4]);
+  }
+  const ctx = document.getElementById('chartDiag').getContext('2d');
+  charts.chartDiag = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: sorted.map(([k]) => k.length > 20 ? k.substring(0,18)+'…' : k),
+      datasets: [{ data:sorted.map(([,v])=>v), backgroundColor:COLORS, borderRadius:6 }]
+    },
+    options: {
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{beginAtZero:true, grid:{color:'#EAF4F4'}}, y:{grid:{display:false}}}
+    }
+  });
+}
+
+function renderChartAntiguedad(pagos) {
+  destroyChart('chartAntiguedad');
+  const pend = pagos.filter(p=>['pendiente','parcial'].includes(p.estado));
+  const hoy = new Date();
+  const buckets = {'0-30 días':0, '31-60 días':0, '61-90 días':0, '>90 días':0};
+  pend.forEach(p => {
+    const days = Math.floor((hoy - new Date(p.fecha))/86400000);
+    const amt = p.monto - (p.pagado||0);
+    if (days <= 30) buckets['0-30 días'] += amt;
+    else if (days <= 60) buckets['31-60 días'] += amt;
+    else if (days <= 90) buckets['61-90 días'] += amt;
+    else buckets['>90 días'] += amt;
+  });
+  const ctx = document.getElementById('chartAntiguedad').getContext('2d');
+  charts.chartAntiguedad = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(buckets),
+      datasets: [{ label:'Monto Pendiente', data:Object.values(buckets),
+        backgroundColor:['#27AE60','#F39C12','#E67E22','#E74C3C'], borderRadius:8 }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>`$${fmt(c.raw)}`}}},
+      scales:{y:{beginAtZero:true,ticks:{callback:v=>`$${(v/1000).toFixed(0)}K`},grid:{color:'#EAF4F4'}},x:{grid:{display:false}}}
+    }
+  });
+}
+
+function renderChartPendAseg(pagos) {
+  destroyChart('chartPendAseg');
+  const pend = pagos.filter(p=>['pendiente','parcial'].includes(p.estado));
+  const byA = {};
+  pend.forEach(p => {
+    const k = p.aseguradora || 'Particular';
+    byA[k] = (byA[k]||0) + (p.monto-(p.pagado||0));
+  });
+  const ctx = document.getElementById('chartPendAseg').getContext('2d');
+  charts.chartPendAseg = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(byA),
+      datasets: [{ data:Object.values(byA), backgroundColor:COLORS, borderWidth:2 }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}},
+        tooltip:{callbacks:{label:c=>`$${fmt(c.raw)}`}}}
+    }
+  });
+}
+
+// ═══════════════════════════════════════
+//  TRANSACTIONS TABLE
+// ═══════════════════════════════════════
+function renderPagos() {
+  const buscar = document.getElementById('buscarPago')?.value?.toLowerCase() || '';
+  const estado = document.getElementById('filtroEstado')?.value || '';
+  let data = filteredPagos.filter(p => {
+    const matchQ = !buscar || p.paciente.toLowerCase().includes(buscar) || p.concepto.toLowerCase().includes(buscar) || p.referencia?.toLowerCase().includes(buscar);
+    const matchE = !estado || p.estado === estado;
+    return matchQ && matchE;
+  }).sort((a,b) => b.fecha.localeCompare(a.fecha));
+
+  const container = document.getElementById('tablaPagos');
+  if (!data.length) {
+    container.innerHTML = `<div class="empty-state"><div class="icon">💳</div><p>No hay transacciones para mostrar</p></div>`;
+    return;
+  }
+  container.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha</th><th>Ref.</th><th>Paciente</th><th>Concepto</th>
+          <th>Monto</th><th>Pagado</th><th>Método</th><th>Estado</th><th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${data.map(p => `
+          <tr>
+            <td>${formatFecha(p.fecha)}</td>
+            <td style="font-family:monospace; font-size:.82rem; color:var(--text-light)">${p.referencia||'-'}</td>
+            <td><strong>${p.paciente}</strong>${p.aseguradora ? `<br><span style="font-size:.75rem;color:var(--text-light)">${p.aseguradora}</span>` : ''}</td>
+            <td>${p.concepto}</td>
+            <td class="amount">$${fmt(p.monto)}</td>
+            <td class="amount credit">$${fmt(p.pagado||0)}</td>
+            <td>${metodoLabel(p.metodo)}</td>
+            <td><span class="badge-status badge-${p.estado}">${estadoLabel(p.estado)}</span></td>
+            <td>
+              <button onclick="editarPago('${p.id}')" style="background:none;border:none;cursor:pointer;font-size:1rem;padding:2px 6px;" title="Editar">✏️</button>
+              ${['pendiente','parcial'].includes(p.estado) ? `<button onclick="marcarPagado('${p.id}')" style="background:none;border:none;cursor:pointer;font-size:1rem;padding:2px 6px;" title="Marcar Pagado">✅</button>` : ''}
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    <div style="margin-top:12px; font-size:.82rem; color:var(--text-light); text-align:right">
+      ${data.length} transacciones · Total cobrado: <strong>$${fmt(data.filter(p=>p.estado!=='anulado').reduce((s,p)=>s+(p.pagado||0),0))}</strong>
+    </div>
+  `;
+}
+
+function filtrarPagos() { renderPagos(); }
+
+function metodoLabel(m) {
+  const map = {efectivo:'💵 Efectivo', tarjeta_credito:'💳 T. Crédito', tarjeta_debito:'💳 T. Débito',
+    transferencia:'🏦 Transferencia', seguro:'🏥 Seguro', cheque:'📄 Cheque'};
+  return map[m] || m;
+}
+function estadoLabel(e) {
+  const map = {pagado:'✅ Pagado', pendiente:'⏳ Pendiente', parcial:'◑ Parcial', anulado:'❌ Anulado'};
+  return map[e] || e;
+}
+function formatFecha(f) {
+  if (!f) return '-';
+  const [y,m,d] = f.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+// ═══════════════════════════════════════
+//  PENDIENTES TABLE
+// ═══════════════════════════════════════
+function renderPendientes(pagos) {
+  const pend = pagos.filter(p=>['pendiente','parcial'].includes(p.estado)).sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  const container = document.getElementById('tablaPendientes');
+  if (!pend.length) {
+    container.innerHTML = `<div class="empty-state"><div class="icon">🎉</div><p>¡Sin pagos pendientes! Todo al día.</p></div>`;
+    return;
+  }
+  const hoy = new Date();
+  container.innerHTML = `
+    <table>
+      <thead>
+        <tr><th>Fecha</th><th>Paciente</th><th>Concepto</th><th>Monto Total</th><th>Pagado</th><th>Pendiente</th><th>Días</th><th>Estado</th><th>Acción</th></tr>
+      </thead>
+      <tbody>
+        ${pend.map(p => {
+          const dias = Math.floor((hoy - new Date(p.fecha))/86400000);
+          const saldo = p.monto - (p.pagado||0);
+          const color = dias > 60 ? 'var(--red)' : dias > 30 ? 'var(--orange)' : 'var(--text)';
+          return `<tr>
+            <td>${formatFecha(p.fecha)}</td>
+            <td><strong>${p.paciente}</strong></td>
+            <td>${p.concepto}</td>
+            <td class="amount">$${fmt(p.monto)}</td>
+            <td class="amount credit">$${fmt(p.pagado||0)}</td>
+            <td class="amount debit">$${fmt(saldo)}</td>
+            <td style="color:${color}; font-weight:700">${dias}d</td>
+            <td><span class="badge-status badge-${p.estado}">${estadoLabel(p.estado)}</span></td>
+            <td>
+              <button onclick="marcarPagado('${p.id}')" class="btn-primary" style="font-size:.78rem; padding:5px 10px;">✅ Cobrar</button>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    <div style="margin-top:12px; font-size:.82rem; color:var(--red); font-weight:700; text-align:right">
+      Total por cobrar: $${fmt(pend.reduce((s,p)=>s+(p.monto-(p.pagado||0)),0))}
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════
+//  PRODUCCION TABLE
+// ═══════════════════════════════════════
+function renderProduccion(pagos) {
+  const meses = {};
+  pagos.filter(p=>p.estado!=='anulado').forEach(p => {
+    const [y,m] = p.fecha.split('-');
+    const k = `${y}-${m}`;
+    if (!meses[k]) meses[k] = { consultas:0, cirugias:0, ingresosConsulta:0, ingresosCirugia:0, total:0, tx:0 };
+    if (p.concepto.includes('Consulta')) { meses[k].consultas++; meses[k].ingresosConsulta += p.pagado||0; }
+    if (p.concepto.includes('Cirugía')) { meses[k].cirugias++; meses[k].ingresosCirugia += p.pagado||0; }
+    meses[k].total += p.pagado||0;
+    meses[k].tx++;
+  });
+  const rows = Object.entries(meses).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,12);
+  document.getElementById('tablaProduccion').innerHTML = `
+    <table>
+      <thead>
+        <tr><th>Mes</th><th>Consultas</th><th>Cirugías</th><th>Ing. Consultas</th><th>Ing. Cirugías</th><th>Total Tx</th><th>Total Ingresos</th><th>Ticket Prom.</th></tr>
+      </thead>
+      <tbody>
+        ${rows.map(([k,v]) => {
+          const [y,m] = k.split('-');
+          const mesNom = new Date(y,m-1,1).toLocaleString('es-DO',{month:'long',year:'numeric'});
+          return `<tr>
+            <td><strong>${mesNom}</strong></td>
+            <td>${v.consultas}</td>
+            <td>${v.cirugias}</td>
+            <td class="amount">$${fmt(v.ingresosConsulta)}</td>
+            <td class="amount">$${fmt(v.ingresosCirugia)}</td>
+            <td>${v.tx}</td>
+            <td class="amount credit"><strong>$${fmt(v.total)}</strong></td>
+            <td class="amount">$${fmt(v.tx ? v.total/v.tx : 0)}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+// ═══════════════════════════════════════
+//  MODAL: PAGO
+// ═══════════════════════════════════════
+let editingPagoId = null;
+
+function abrirModalPago() {
+  editingPagoId = null;
+  document.getElementById('formPago').reset();
+  const hoy = new Date().toISOString().split('T')[0];
+  document.getElementById('pagFecha').value = hoy;
+  cargarPacientesModal();
+  document.getElementById('modalPago').classList.add('open');
+}
+
+function cargarPacientesModal() {
+  const sel = document.getElementById('pagPaciente');
+  const pacientes = LS.get('mc_pacientes');
+  sel.innerHTML = '<option value="">Seleccionar...</option>';
+  pacientes.forEach(p => {
+    sel.innerHTML += `<option value="${p.nombre} ${p.apellido}">${p.apellido}, ${p.nombre}</option>`;
+  });
+  if (pacientes.length === 0) {
+    // Demo names
+    ['García, Ana', 'López, Carlos', 'Rodríguez, María', 'Martínez, Juan'].forEach(n => {
+      sel.innerHTML += `<option value="${n}">${n}</option>`;
+    });
+  }
+}
+
+function editarPago(id) {
+  const pagos = LS.get('mc_pagos');
+  const pago = pagos.find(p => p.id === id);
+  if (!pago) return;
+  editingPagoId = id;
+  cargarPacientesModal();
+  document.getElementById('pagFecha').value = pago.fecha;
+  document.getElementById('pagConcepto').value = pago.concepto;
+  document.getElementById('pagMonto').value = pago.monto;
+  document.getElementById('pagPagado').value = pago.pagado || 0;
+  document.getElementById('pagMetodo').value = pago.metodo;
+  document.getElementById('pagAseguradora').value = pago.aseguradora || '';
+  document.getElementById('pagReferencia').value = pago.referencia || '';
+  document.getElementById('pagNotas').value = pago.notas || '';
+  document.getElementById('modalPago').classList.add('open');
+}
+
+function marcarPagado(id) {
+  const pagos = LS.get('mc_pagos');
+  const idx = pagos.findIndex(p => p.id === id);
+  if (idx >= 0) {
+    pagos[idx].pagado = pagos[idx].monto;
+    pagos[idx].estado = 'pagado';
+    LS.set('mc_pagos', pagos);
+    cargarDatos();
+  }
+}
+
+function cerrarModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function guardarPago(e) {
+  e.preventDefault();
+  const pagos = LS.get('mc_pagos');
+  const monto = parseFloat(document.getElementById('pagMonto').value) || 0;
+  const pagado = parseFloat(document.getElementById('pagPagado').value) || 0;
+  const estado = pagado >= monto ? 'pagado' : pagado > 0 ? 'parcial' : 'pendiente';
+
+  if (editingPagoId) {
+    const idx = pagos.findIndex(p => p.id === editingPagoId);
+    if (idx >= 0) {
+      pagos[idx] = { ...pagos[idx],
+        paciente: document.getElementById('pagPaciente').value,
+        fecha: document.getElementById('pagFecha').value,
+        concepto: document.getElementById('pagConcepto').value,
+        monto, pagado, estado,
+        metodo: document.getElementById('pagMetodo').value,
+        aseguradora: document.getElementById('pagAseguradora').value,
+        referencia: document.getElementById('pagReferencia').value,
+        notas: document.getElementById('pagNotas').value,
+      };
+    }
+  } else {
+    const ctrs = LS.get('mc_counters', {});
+    ctrs.pago = (ctrs.pago||0) + 1;
+    LS.set('mc_counters', ctrs);
+    pagos.push({
+      id: 'PAG-' + String(ctrs.pago).padStart(4,'0'),
+      paciente: document.getElementById('pagPaciente').value,
+      fecha: document.getElementById('pagFecha').value,
+      concepto: document.getElementById('pagConcepto').value,
+      monto, pagado, estado,
+      metodo: document.getElementById('pagMetodo').value,
+      aseguradora: document.getElementById('pagAseguradora').value,
+      referencia: document.getElementById('pagReferencia').value,
+      notas: document.getElementById('pagNotas').value,
+    });
+  }
+  LS.set('mc_pagos', pagos);
+  cerrarModal('modalPago');
+  cargarDatos();
+}
+
+// ═══════════════════════════════════════
+//  TABS
+// ═══════════════════════════════════════
+function cambiarTab(id, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
+}
+
+// ═══════════════════════════════════════
+//  CSV EXPORT
+// ═══════════════════════════════════════
+function exportarCSV() {
+  const rows = [['ID','Fecha','Paciente','Concepto','Monto','Pagado','Método','Aseguradora','Estado','Referencia']];
+  filteredPagos.forEach(p => {
+    rows.push([p.id, p.fecha, p.paciente, p.concepto, p.monto, p.pagado||0, p.metodo, p.aseguradora||'', p.estado, p.referencia||'']);
+  });
+  const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+  const blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `finanzas_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+}
+
+// ═══════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  // Modo embebido: oculta el header cuando carga dentro del iframe de index.html
+  if (new URLSearchParams(location.search).get('embed') === '1') {
+    const hdr = document.querySelector('header');
+    if (hdr) hdr.style.display = 'none';
+  } else {
+    if (typeof _refreshLogoInDOM !== 'undefined') {
+      _refreshLogoInDOM();
+    } else {
+      const hdrIcon = document.getElementById('hdr-icon');
+      if (hdrIcon && typeof LOGO_SVG_SMALL !== 'undefined') hdrIcon.innerHTML = LOGO_SVG_SMALL;
+    }
+  }
+  initDemoData();
+  cargarDatos();
+  // Custom period inputs
+  document.getElementById('selPeriod').addEventListener('change', cambiarPeriodo);
+});
+</script>
+</body>
+</html>
